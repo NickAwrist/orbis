@@ -148,11 +148,10 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
   },
 
   updatePanel: (panelId, updates) => {
-    const ws = get().getActiveWorkspace()
-    if (!ws) return
+    console.log('[DEBUG] WorkspaceStore updatePanel called for panelId:', panelId, 'with updates:', updates)
     set((s) => ({
       workspaces: s.workspaces.map((w) =>
-        w.id === ws.id
+        w.panels.some((p) => p.id === panelId)
           ? {
               ...w,
               panels: w.panels.map((p) =>

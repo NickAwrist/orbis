@@ -13,8 +13,15 @@ export function BrowserPanel({ panel }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const webviewRef = useRef<Electron.WebviewTag | null>(null)
   const urlInputRef = useRef<HTMLInputElement>(null)
+  
+  const componentStateRef = useRef(panel.componentState)
+  useEffect(() => {
+    componentStateRef.current = panel.componentState
+  }, [panel.componentState])
 
   const savedUrl = panel.componentState?.url || 'https://www.google.com'
+  console.log('[DEBUG] BrowserPanel resolving savedUrl for panel', panel.id, '->', savedUrl)
+  
   const [displayUrl, setDisplayUrl] = useState(savedUrl)
   const [canGoBack, setCanGoBack] = useState(false)
   const [canGoForward, setCanGoForward] = useState(false)
@@ -31,9 +38,11 @@ export function BrowserPanel({ panel }: Props) {
     const container = containerRef.current
     if (!container || webviewRef.current) return
 
+    console.log('[DEBUG] BrowserPanel mount effect running for panel', panel.id, 'partition:', `persist:browser`, 'src:', savedUrl)
+
     const wv = document.createElement('webview') as Electron.WebviewTag
-    wv.setAttribute('src', savedUrl)
     wv.setAttribute('partition', 'persist:browser')
+    wv.setAttribute('src', savedUrl)
     wv.setAttribute('allowpopups', '')
     wv.style.width = '100%'
     wv.style.height = '100%'
@@ -44,34 +53,44 @@ export function BrowserPanel({ panel }: Props) {
     const onStartLoading = () => setIsLoading(true)
     const onStopLoading = () => setIsLoading(false)
 
-    const onNavigate = (e: Electron.DidNavigateEvent) => {
-      setDisplayUrl(e.url)
-      setCanGoBack(wv.canGoBack())
-      setCanGoForward(wv.canGoForward())
-      updatePanel(panel.id, {
-        componentState: { ...panel.componentState, url: e.url },
-      })
-    }
+    const handleNavigation = (e: any) => {
+      try {
+        const currentUrl = wv.getURL()
+        console.log(`[DEBUG] BrowserPanel handleNavigation fired (${e?.type}). currentUrl:`, currentUrl)
+        if (!currentUrl || currentUrl === 'about:blank' || currentUrl === 'data:,') return
 
-    const onNavigateInPage = (e: Electron.DidNavigateInPageEvent) => {
-      setDisplayUrl(e.url)
-      setCanGoBack(wv.canGoBack())
-      setCanGoForward(wv.canGoForward())
+        setDisplayUrl(currentUrl)
+        setCanGoBack(wv.canGoBack())
+        setCanGoForward(wv.canGoForward())
+        
+        // Only update store if URL actually changed to avoid spam
+        if (componentStateRef.current?.url !== currentUrl) {
+          console.log('[DEBUG] BrowserPanel calling updatePanel for url:', currentUrl)
+          updatePanel(panel.id, {
+            componentState: { ...componentStateRef.current, url: currentUrl },
+          })
+        }
+      } catch (err) {
+        console.error('[DEBUG] BrowserPanel handleNavigation error:', err)
+      }
     }
 
     wv.addEventListener('did-start-loading', onStartLoading)
     wv.addEventListener('did-stop-loading', onStopLoading)
-    wv.addEventListener('did-navigate', onNavigate as any)
-    wv.addEventListener('did-navigate-in-page', onNavigateInPage as any)
+    wv.addEventListener('did-navigate', handleNavigation as any)
+    wv.addEventListener('did-navigate-in-page', handleNavigation as any)
+    wv.addEventListener('load-commit', handleNavigation as any)
 
     container.appendChild(wv)
     webviewRef.current = wv
 
     return () => {
+      console.log('[DEBUG] BrowserPanel unmounting cleanup for panel', panel.id)
       wv.removeEventListener('did-start-loading', onStartLoading)
       wv.removeEventListener('did-stop-loading', onStopLoading)
-      wv.removeEventListener('did-navigate', onNavigate as any)
-      wv.removeEventListener('did-navigate-in-page', onNavigateInPage as any)
+      wv.removeEventListener('did-navigate', handleNavigation as any)
+      wv.removeEventListener('did-navigate-in-page', handleNavigation as any)
+      wv.removeEventListener('load-commit', handleNavigation as any)
     }
   }, [])
 
@@ -91,8 +110,11 @@ export function BrowserPanel({ panel }: Props) {
 
       setDisplayUrl(processed)
       webviewRef.current?.loadURL(processed)
+      updatePanel(panel.id, {
+        componentState: { ...componentStateRef.current, url: processed },
+      })
     },
-    [],
+    [panel.id, updatePanel],
   )
 
   const handleUrlKeyDown = useCallback(

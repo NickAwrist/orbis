@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { InstalledExtension, ThemeInfo } from '../types/electron'
 import { useIDEStore } from '../stores/workspace.store'
+import { applyFullTheme } from '../utils/theme-engine'
 
 interface MarketplaceExtension {
   name: string
@@ -185,10 +186,11 @@ export function ExtensionPanel() {
       try {
         const themeData = await window.electronAPI.extensions.loadTheme(theme.themePath)
         if (themeData) {
-          // Store theme choice so EditorPanel can pick it up
+          // Apply all CSS variables through the theme engine
+          applyFullTheme(themeData, theme.uiTheme, undefined, theme)
+          // Notify EditorPanel so it can update Monaco
           const event = new CustomEvent('ide-theme-change', { detail: { theme, themeData } })
           window.dispatchEvent(event)
-          localStorage.setItem('dynamic-ide-theme', JSON.stringify(theme))
           setStatusMsg(`Applied theme: ${theme.label}`)
           setTimeout(() => setStatusMsg(null), 3000)
         }

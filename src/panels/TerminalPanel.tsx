@@ -21,6 +21,38 @@ interface TerminalInstance {
 
 const terminalInstances = new Map<string, TerminalInstance>()
 
+/**
+ * Read the current theme colors from CSS custom properties set by the theme engine.
+ */
+function getTerminalThemeFromCSS(): Record<string, string> {
+  const root = document.documentElement
+  const get = (v: string, fallback: string) =>
+    root.style.getPropertyValue(v).trim() || fallback
+
+  return {
+    background:          get('--terminal-bg',    get('--bg-primary', '#1e1e2e')),
+    foreground:          get('--terminal-fg',    get('--text-primary', '#cdd6f4')),
+    cursor:              get('--accent',         '#89b4fa'),
+    selectionBackground: get('--selection-bg',   '#45475a'),
+    black:               get('--ansi-black',     '#45475a'),
+    red:                 get('--ansi-red',       '#f38ba8'),
+    green:               get('--ansi-green',     '#a6e3a1'),
+    yellow:              get('--ansi-yellow',    '#f9e2af'),
+    blue:                get('--ansi-blue',      '#89b4fa'),
+    magenta:             get('--ansi-magenta',   '#cba6f7'),
+    cyan:                get('--ansi-cyan',      '#94e2d5'),
+    white:               get('--ansi-white',     '#bac2de'),
+    brightBlack:         get('--ansi-bright-black',   '#585b70'),
+    brightRed:           get('--ansi-bright-red',     '#f38ba8'),
+    brightGreen:         get('--ansi-bright-green',   '#a6e3a1'),
+    brightYellow:        get('--ansi-bright-yellow',  '#f9e2af'),
+    brightBlue:          get('--ansi-bright-blue',    '#89b4fa'),
+    brightMagenta:       get('--ansi-bright-magenta', '#f5c2e7'),
+    brightCyan:          get('--ansi-bright-cyan',    '#94e2d5'),
+    brightWhite:         get('--ansi-bright-white',   '#a6adc8'),
+  }
+}
+
 function debouncedFit(inst: TerminalInstance) {
   if (inst.fitDebounce) clearTimeout(inst.fitDebounce)
   inst.fitDebounce = setTimeout(() => {
@@ -36,20 +68,7 @@ function getOrCreateInstance(key: string): TerminalInstance {
   if (inst) return inst
 
   const terminal = new Terminal({
-    theme: {
-      background: '#1e1e2e',
-      foreground: '#cdd6f4',
-      cursor: '#89b4fa',
-      selectionBackground: '#45475a',
-      black: '#45475a',
-      red: '#f38ba8',
-      green: '#a6e3a1',
-      yellow: '#f9e2af',
-      blue: '#89b4fa',
-      magenta: '#cba6f7',
-      cyan: '#94e2d5',
-      white: '#bac2de',
-    },
+    theme: getTerminalThemeFromCSS(),
     fontSize: 13,
     fontFamily: "'Cascadia Code', 'Fira Code', 'Consolas', monospace",
     cursorBlink: true,
@@ -99,6 +118,20 @@ export function TerminalPanel({ panel, workspace }: Props) {
         container.removeChild(inst.hostEl)
       }
     }
+  }, [instanceKey])
+
+  // Listen for theme changes and update the xterm theme
+  useEffect(() => {
+    const handler = () => {
+      const inst = terminalInstances.get(instanceKey)
+      if (!inst) return
+      // Small delay to let CSS variables settle first
+      requestAnimationFrame(() => {
+        inst.terminal.options.theme = getTerminalThemeFromCSS()
+      })
+    }
+    window.addEventListener('ide-theme-change', handler)
+    return () => window.removeEventListener('ide-theme-change', handler)
   }, [instanceKey])
 
   // Connect to PTY (only once per instance)
@@ -159,3 +192,4 @@ export function TerminalPanel({ panel, workspace }: Props) {
     />
   )
 }
+

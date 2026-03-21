@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
 import Editor, { type Monaco } from '@monaco-editor/react'
 import { PanelState, WorkspaceState, useIDEStore } from '../stores/workspace.store'
-import { convertToMonacoTheme, applyCSSVariables } from '../utils/theme-engine'
+import { applyFullTheme, getSavedThemeInfo, getCurrentThemeId, registerMonaco } from '../utils/theme-engine'
 
 interface Props {
   panel: PanelState
@@ -22,39 +22,34 @@ export function EditorPanel({ panel, workspace }: Props) {
   const [monacoTheme, setMonacoTheme] = useState('vs-dark')
   const monacoRef = useRef<Monaco | null>(null)
 
-  // Listen for theme changes dispatched from the ExtensionPanel
+  // Listen for theme changes — Monaco was already updated by applyFullTheme
+  // via the global ref, we just need to sync the local state
   useEffect(() => {
-    const handler = (e: Event) => {
-      const { theme, themeData } = (e as CustomEvent).detail
-      if (!monacoRef.current || !themeData) return
-      const converted = convertToMonacoTheme(themeData, theme.uiTheme)
-      const id = `ext-${theme.extensionId}-${theme.label}`.replace(/[^a-zA-Z0-9-]/g, '-')
-      monacoRef.current.editor.defineTheme(id, converted)
-      monacoRef.current.editor.setTheme(id)
-      setMonacoTheme(id)
-      applyCSSVariables(themeData)
+    const handler = () => {
+      setMonacoTheme(getCurrentThemeId() || 'vs-dark')
     }
     window.addEventListener('ide-theme-change', handler)
     return () => window.removeEventListener('ide-theme-change', handler)
   }, [])
 
-  // Apply saved theme on first Monaco mount
+  // Register Monaco globally and apply saved/default theme on first mount
   const handleEditorMount = useCallback((_editor: any, monaco: Monaco) => {
     monacoRef.current = monaco
-    const raw = localStorage.getItem('dynamic-ide-theme')
-    if (!raw) return
-    try {
-      const saved = JSON.parse(raw)
-      window.electronAPI.extensions.loadTheme(saved.themePath).then((themeData: any) => {
-        if (!themeData) return
-        const converted = convertToMonacoTheme(themeData, saved.uiTheme)
-        const id = `ext-${saved.extensionId}-${saved.label}`.replace(/[^a-zA-Z0-9-]/g, '-')
-        monaco.editor.defineTheme(id, converted)
-        monaco.editor.setTheme(id)
-        setMonacoTheme(id)
-        applyCSSVariables(themeData)
+    registerMonaco(monaco)
+
+    const saved = getSavedThemeInfo()
+    if (!saved) {
+      import('../themes/default-theme').then(({ default: defaultTheme }) => {
+        applyFullTheme(defaultTheme, 'vs-dark', monaco)
+        setMonacoTheme(getCurrentThemeId() || 'vs-dark')
       })
-    } catch { /* ignore bad saved theme */ }
+      return
+    }
+    window.electronAPI.extensions.loadTheme(saved.themePath).then((themeData: any) => {
+      if (!themeData) return
+      applyFullTheme(themeData, saved.uiTheme, monaco, saved)
+      setMonacoTheme(getCurrentThemeId() || 'vs-dark')
+    }).catch(() => { /* ignore bad saved theme */ })
   }, [])
 
   const setTabs = useCallback(

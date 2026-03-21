@@ -4,6 +4,7 @@ import { WorkspaceSwitcher } from './components/WorkspaceSwitcher'
 import { Canvas } from './components/Canvas'
 import { AddComponentMenu } from './components/AddComponentMenu'
 import { StatusBar } from './components/StatusBar'
+import { initializeDefaultTheme } from './utils/theme-engine'
 
 export default function App() {
   const loadFromDisk = useIDEStore((s) => s.loadFromDisk)
@@ -14,6 +15,11 @@ export default function App() {
   useEffect(() => {
     loadFromDisk()
   }, [loadFromDisk])
+
+  // Initialize theme system — applies saved VSX theme or bundled default
+  useEffect(() => {
+    initializeDefaultTheme()
+  }, [])
 
   // Expose active workspace root for extension host startup
   useEffect(() => {

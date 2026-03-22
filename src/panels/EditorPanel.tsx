@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState, useRef } from 'react'
 import Editor, { type Monaco } from '@monaco-editor/react'
 import { PanelState, WorkspaceState, useIDEStore } from '../stores/workspace.store'
 import { applyFullTheme, getSavedThemeInfo, getCurrentThemeId, registerMonaco } from '../utils/theme-engine'
+import { createUiLogger, Scopes } from '../lib/logger'
+
+const log = createUiLogger(Scopes.uiPanelEditor)
 
 interface Props {
   panel: PanelState
@@ -79,7 +82,7 @@ export function EditorPanel({ panel, workspace }: Props) {
         const newTabs = [...tabs, { filePath, name, content, dirty: false }]
         setTabs(newTabs, newTabs.length - 1)
       } catch (err) {
-        console.error('Failed to open file:', err)
+        log.error('open_file_failed', err instanceof Error ? err.message : String(err))
       }
     },
     [tabs, setTabs],
@@ -104,7 +107,7 @@ export function EditorPanel({ panel, workspace }: Props) {
       )
       setTabs(newTabs)
     } catch (err) {
-      console.error('Failed to save file:', err)
+      log.error('save_file_failed', err instanceof Error ? err.message : String(err))
     }
   }, [tabs, activeTab, setTabs])
 

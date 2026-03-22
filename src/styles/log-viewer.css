@@ -1,0 +1,168 @@
+/* ===== APP LOG VIEWER (Ctrl+Shift+L) ===== */
+.app-log-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  backdrop-filter: blur(2px);
+  animation: ui-overlay-in var(--motion-duration-sm) var(--motion-ease-out) both;
+}
+
+.app-log-modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: min(920px, 94vw);
+  height: min(560px, 85vh);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px var(--widget-shadow, rgba(0, 0, 0, 0.5));
+  overflow: hidden;
+  animation: ui-modal-in var(--motion-duration-md) var(--motion-ease-out) both;
+}
+
+.app-log-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.app-log-modal__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.app-log-modal__hint {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  margin: 2px 0 0;
+}
+
+.app-log-modal__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.app-log-modal__toolbar label {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-log-modal__toolbar select {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.app-log-modal__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.app-log-modal__btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--motion-duration-sm) var(--motion-ease-standard);
+}
+.app-log-modal__btn:hover {
+  background: var(--bg-surface-hover);
+}
+
+.app-log-modal__btn--close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #888);
+  font-size: 18px;
+  line-height: 1;
+}
+.app-log-modal__btn--close:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.app-log-modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.app-log-modal__row {
+  display: grid;
+  grid-template-columns: 148px 52px 1fr;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  word-break: break-all;
+}
+
+.app-log-modal__row:last-child {
+  border-bottom: none;
+}
+
+.app-log-modal__ts {
+  color: var(--text-muted, #888);
+  white-space: nowrap;
+}
+
+.app-log-modal__level {
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.app-log-modal__level--debug {
+  color: #8b9cb3;
+}
+.app-log-modal__level--info {
+  color: #7eb6e8;
+}
+.app-log-modal__level--warn {
+  color: #e5c07b;
+}
+.app-log-modal__level--error {
+  color: #e06c75;
+}
+
+.app-log-modal__scope {
+  color: #98c379;
+}
+
+.app-log-modal__empty {
+  color: var(--text-muted, #888);
+  padding: 24px;
+  text-align: center;
+}

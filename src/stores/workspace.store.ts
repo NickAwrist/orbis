@@ -1,4 +1,7 @@
 import { create } from 'zustand'
+import { createUiLogger, Scopes } from '../lib/logger'
+
+const log = createUiLogger(Scopes.uiStoreWorkspace)
 
 export type PanelType = 'editor' | 'terminal' | 'file-explorer' | 'git' | 'browser' | 'extension-view' | 't3-code'
 
@@ -28,6 +31,7 @@ interface IDEStore {
   activeWorkspaceId: string | null
   maxZIndex: number
   isExtensionsOpen: boolean
+  isLogViewerOpen: boolean
 
   // Workspace CRUD
   addWorkspace: (name: string, rootPath: string) => void
@@ -38,6 +42,7 @@ interface IDEStore {
   setActiveWorkspace: (id: string) => void
   getActiveWorkspace: () => WorkspaceState | undefined
   setExtensionsOpen: (val: boolean) => void
+  setLogViewerOpen: (val: boolean) => void
 
   // Panel CRUD
   addPanel: (type: PanelType, componentState?: Record<string, any>) => void
@@ -92,6 +97,7 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
   activeWorkspaceId: null,
   maxZIndex: 1,
   isExtensionsOpen: false,
+  isLogViewerOpen: false,
 
   _nextId: () => {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
@@ -199,6 +205,10 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
     set({ isExtensionsOpen: val })
   },
 
+  setLogViewerOpen: (val: boolean) => {
+    set({ isLogViewerOpen: val })
+  },
+
   addPanel: (type, componentState) => {
     const ws = get().getActiveWorkspace()
     if (!ws) return
@@ -241,7 +251,7 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
   },
 
   updatePanel: (panelId, updates) => {
-    console.log('[DEBUG] WorkspaceStore updatePanel called for panelId:', panelId, 'with updates:', updates)
+    log.debug('update_panel', JSON.stringify({ panelId, updates }))
     set((s) => ({
       workspaces: s.workspaces.map((w) =>
         w.panels.some((p) => p.id === panelId)

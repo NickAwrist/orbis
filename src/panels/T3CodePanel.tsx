@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { PanelState, WorkspaceState, useIDEStore } from '../stores/workspace.store'
+import { createUiLogger, Scopes } from '../lib/logger'
+
+const log = createUiLogger(Scopes.uiPanelT3)
 
 /** Poll until TCP accepts HTTP on this port (npx/t3 can take minutes on first run). Uses no-cors so CORS headers are not required. */
 async function waitForLocalServer(
@@ -109,7 +112,7 @@ export function T3CodePanel({ panel, workspace }: Props) {
           window.electronAPI.pty.dispose(ptyId)
         }
       } catch (err) {
-        console.error('Failed to start T3 Server PTY', err)
+        log.error('t3_pty_start_failed', err instanceof Error ? err.message : String(err))
         setIsStarting(false)
         setStartTimedOut(true)
         return () => {}

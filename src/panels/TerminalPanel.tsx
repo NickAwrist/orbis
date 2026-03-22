@@ -5,6 +5,9 @@ import type { IDisposable } from '@xterm/xterm'
 import { Terminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 import { PanelState, WorkspaceState } from '../stores/workspace.store'
+import { createUiLogger, Scopes } from '../lib/logger'
+
+const log = createUiLogger(Scopes.uiPanelTerminal)
 
 interface Props {
   panel: PanelState
@@ -218,7 +221,7 @@ export function TerminalPanel({ panel, workspace }: Props) {
           window.electronAPI.pty.resize(ptyId, cols, rows)
         })
       } catch (err) {
-        console.error('Failed to create PTY:', err)
+        log.error('pty_create_failed', err instanceof Error ? err.message : String(err))
       }
     }
 

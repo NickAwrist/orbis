@@ -18,6 +18,7 @@ export function StatusBar() {
     s.workspaces.find((w) => w.id === s.activeWorkspaceId),
   )
   const setExtensionsOpen = useIDEStore((s) => s.setExtensionsOpen)
+  const setLogViewerOpen = useIDEStore((s) => s.setLogViewerOpen)
 
   useEffect(() => {
     const cleanup = window.electronAPI.extensions.onStatusBarUpdate((item: StatusBarItem) => {
@@ -96,6 +97,22 @@ export function StatusBar() {
           </button>
         ))}
         <button
+          type="button"
+          className="statusbar__item statusbar__item--clickable statusbar__item--logs"
+          title="Application logs (Ctrl+Shift+L)"
+          onClick={() => setLogViewerOpen(true)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ marginRight: '3px', flexShrink: 0 }}>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          Logs
+        </button>
+        <button
+          type="button"
           className="statusbar__item statusbar__item--clickable"
           title="Extensions"
           onClick={() => setExtensionsOpen(true)}

@@ -178,6 +178,39 @@ const api = {
       return () => ipcRenderer.removeListener('ext:webviewPanelCreated', handler)
     },
   },
+
+  appLog: {
+    write: (
+      level: 'debug' | 'info' | 'warn' | 'error',
+      scope: string,
+      message: string,
+      detail?: string,
+    ) => ipcRenderer.send('app-log:write', { level, scope, message, detail }),
+    getRecent: () => ipcRenderer.invoke('app-log:getRecent') as Promise<
+      Array<{
+        ts: string
+        level: string
+        scope: string
+        message: string
+        detail?: string
+      }>
+    >,
+    clearBuffer: () => ipcRenderer.invoke('app-log:clearBuffer') as Promise<boolean>,
+    revealLogFile: () => ipcRenderer.invoke('app-log:revealLogFile') as Promise<boolean>,
+    onEntry: (
+      callback: (entry: {
+        ts: string
+        level: string
+        scope: string
+        message: string
+        detail?: string
+      }) => void,
+    ) => {
+      const handler = (_e: any, entry: any) => callback(entry)
+      ipcRenderer.on('app-log:entry', handler)
+      return () => ipcRenderer.removeListener('app-log:entry', handler)
+    },
+  },
 }
 
 contextBridge.exposeInMainWorld('electronAPI', api)

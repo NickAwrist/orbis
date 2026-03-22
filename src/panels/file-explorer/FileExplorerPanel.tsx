@@ -4,6 +4,9 @@ import { FileContextMenu } from './FileContextMenu'
 import { FileTree } from './FileTree'
 import type { ContextAction, ContextMenu, InlineInputState, TreeNode } from './fileTreeTypes'
 import { getPathSep, updateTreeAt } from './fileTreeUtils'
+import { createUiLogger, Scopes } from '../../lib/logger'
+
+const log = createUiLogger(Scopes.uiPanelExplorer)
 
 interface Props {
   panel: PanelState
@@ -186,7 +189,7 @@ export function FileExplorerPanel({ panel, workspace }: Props) {
         await window.electronAPI.fs.renamePath(inlineInput.existingPath, newPath)
       }
     } catch (err) {
-      console.error('File operation failed:', err)
+      log.error('file_operation_failed', err instanceof Error ? err.message : String(err))
     }
 
     setInlineInput(null)

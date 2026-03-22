@@ -8,6 +8,21 @@ import { WorkspaceService } from './services/workspace.service'
 import { BrowserService } from './services/browser.service'
 import { ExtensionService } from './services/extension.service'
 import { ExtensionHostService } from './services/extension-host.service'
+import {
+  initAppLogger,
+  forScope,
+  writeFromRenderer,
+  getRecentLogs,
+  clearRingBuffer,
+  getLogFilePath,
+  subscribeLog,
+  type LogLevel,
+} from './logging/app-logger'
+import { Scopes } from './logging/scopes'
+
+const protoLog = forScope(Scopes.mainExtensionProtocol)
+const rpcLog = forScope(Scopes.mainExtensionRpc)
+const bridgeLog = forScope(Scopes.mainExtensionBridge)
 
 let mainWindow: BrowserWindow | null = null
 const ptyService = new PtyService()
@@ -60,6 +75,8 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.whenReady().then(() => {
+  initAppLogger()
+
   protocol.handle('vscode-webview-resource', async (request) => {
     const parsed = new URL(request.url)
     let filePath = decodeURIComponent(parsed.pathname)
@@ -83,7 +100,10 @@ app.whenReady().then(() => {
     const contentType = mimeTypes[ext] || 'application/octet-stream'
 
     const fileExists = fs.existsSync(filePath)
-    console.log(`[EXT-RES] ${fileExists ? '✓' : '✗'} ${contentType} ${filePath}`)
+    protoLog.debug(
+      `${fileExists ? 'resolve_ok' : 'missing'} ${contentType}`,
+      filePath,
+    )
 
     try {
       const data = fs.readFileSync(filePath)
@@ -92,7 +112,7 @@ app.whenReady().then(() => {
         headers: { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' },
       })
     } catch (err: any) {
-      console.error(`[EXT-RES] ✗ FAILED to read: ${filePath} — ${err.message}`)
+      protoLog.error('read_failed', `${filePath} — ${err.message}`)
       return new Response('Not Found', { status: 404 })
     }
   })
@@ -112,6 +132,41 @@ app.on('activate', () => {
 })
 
 function registerIpcHandlers() {
+  const validLevels = new Set<LogLevel>(['debug', 'info', 'warn', 'error'])
+
+  ipcMain.handle('app-log:getRecent', () => getRecentLogs())
+  ipcMain.handle('app-log:clearBuffer', () => {
+    clearRingBuffer()
+    return true
+  })
+  ipcMain.handle('app-log:revealLogFile', () => {
+    const fp = getLogFilePath()
+    if (!fp) return false
+    shell.showItemInFolder(fp)
+    return true
+  })
+  ipcMain.on('app-log:write', (_e, payload: unknown) => {
+    if (!payload || typeof payload !== 'object') return
+    const p = payload as Record<string, unknown>
+    const level = p.level
+    const scope = p.scope
+    const message = p.message
+    const detailRaw = p.detail
+    if (typeof level !== 'string' || !validLevels.has(level as LogLevel)) return
+    if (typeof scope !== 'string' || typeof message !== 'string') return
+    if (scope.length > 512 || message.length > 20_000) return
+    let detail: string | undefined
+    if (detailRaw !== undefined) {
+      if (typeof detailRaw !== 'string' || detailRaw.length > 40_000) return
+      detail = detailRaw
+    }
+    writeFromRenderer(level as LogLevel, scope, message, detail)
+  })
+
+  subscribeLog((entry) => {
+    mainWindow?.webContents.send('app-log:entry', entry)
+  })
+
   // Window controls
   ipcMain.on('window:minimize', () => mainWindow?.minimize())
   ipcMain.on('window:maximize', () => {
@@ -235,27 +290,30 @@ function registerIpcHandlers() {
 
   // Extension host
   ipcMain.handle('exthost:start', async (_e, { workspaceFolders }: { workspaceFolders: string[] }) => {
-    console.log('[EXT] ▶ Starting extension host...', { workspaceFolders })
+    rpcLog.info('exthost_start', JSON.stringify({ workspaceFolders }))
     const extensions = await extensionService.listInstalled()
-    console.log(`[EXT] Found ${extensions.length} installed extensions:`, extensions.map(e => `${e.id} (${e.enabled ? 'ON' : 'OFF'})`).join(', '))
+    rpcLog.info(
+      'installed_extensions',
+      extensions.map((e) => `${e.id} (${e.enabled ? 'on' : 'off'})`).join(', '),
+    )
     try {
       await extensionHostService.start(extensions, workspaceFolders)
-      console.log('[EXT] ✓ Extension host started successfully')
+      rpcLog.info('exthost_started', 'ok')
       return { ok: true }
     } catch (err: any) {
-      console.error('[EXT] ✗ Extension host start FAILED:', err.message)
+      rpcLog.error('exthost_start_failed', err.message)
       throw err
     }
   })
   ipcMain.handle('exthost:stop', () => extensionHostService.stop())
   ipcMain.handle('exthost:activate', async (_e, extensionId: string) => {
-    console.log(`[EXT] ▶ Activating extension: ${extensionId}`)
+    rpcLog.info('activate', extensionId)
     try {
       const result = await extensionHostService.activateExtension(extensionId)
-      console.log(`[EXT] ✓ Extension activated: ${extensionId}`)
+      rpcLog.info('activated', extensionId)
       return result
     } catch (err: any) {
-      console.error(`[EXT] ✗ Activation failed for ${extensionId}:`, err.message)
+      rpcLog.error('activate_failed', `${extensionId}: ${err.message}`)
       throw err
     }
   })
@@ -264,24 +322,24 @@ function registerIpcHandlers() {
   })
   ipcMain.handle('exthost:status', () => extensionHostService.getStatus())
   ipcMain.handle('exthost:getViews', async () => {
-    console.log(`[EXT] Querying registered views (host running: ${extensionHostService.isRunning})`)
+    rpcLog.debug('get_views', `host_running=${extensionHostService.isRunning}`)
     try {
       const views = await extensionHostService.getRegisteredViews()
-      console.log(`[EXT] ✓ Found ${views.length} views:`, views.map(v => v.viewId).join(', '))
+      rpcLog.info('views', views.map((v) => v.viewId).join(', ') || '(none)')
       return views
     } catch (err: any) {
-      console.error(`[EXT] ✗ getViews failed:`, err.message)
+      rpcLog.error('get_views_failed', err.message)
       throw err
     }
   })
   ipcMain.handle('exthost:resolveView', async (_e, viewId: string) => {
-    console.log(`[EXT] ▶ Resolving webview: ${viewId}`)
+    rpcLog.debug('resolve_view', viewId)
     try {
       const result = await extensionHostService.resolveWebviewView(viewId)
-      console.log(`[EXT] ✓ View resolved: ${viewId} (${result?.html?.length || 0} bytes HTML)`)
+      rpcLog.info('view_resolved', `${viewId} ${result?.html?.length || 0} bytes`)
       return result
     } catch (err: any) {
-      console.error(`[EXT] ✗ resolveView failed for ${viewId}:`, err.message)
+      rpcLog.error('resolve_view_failed', `${viewId}: ${err.message}`)
       throw err
     }
   })
@@ -303,40 +361,40 @@ function registerIpcHandlers() {
         mainWindow.webContents.send('ext:statusBarMessage', params.text)
         break
       case 'window.showMessage':
-        console.log(`[EXT-MSG] showMessage (${params.level}): ${params.message}`)
+        bridgeLog.info('show_message', `${params.level}: ${params.message}`)
         mainWindow.webContents.send('ext:showMessage', params)
         break
       case 'extension.activated':
-        console.log(`[EXT-MSG] ✓ Extension activated: ${params.extensionId || params.name}`)
+        bridgeLog.info('extension_activated', String(params.extensionId || params.name || ''))
         mainWindow.webContents.send('ext:activated', params)
         break
       case 'extension.activationFailed':
-        console.error(`[EXT-MSG] ✗ Activation failed: ${params.extensionId} — ${params.error}`)
+        bridgeLog.error('activation_failed', `${params.extensionId} — ${params.error}`)
         mainWindow.webContents.send('ext:activationFailed', params)
         break
       case 'extension.error':
-        console.error(`[EXT-MSG] ✗ Extension error: ${params.message}`)
+        bridgeLog.error('extension_error', String(params.message || ''))
         mainWindow.webContents.send('ext:error', params)
         break
       case 'webview.htmlUpdate':
-        console.log(`[EXT-MSG] Webview HTML update for ${params.viewId} (${params.html?.length || 0} bytes)`)
+        bridgeLog.debug('webview_html', `${params.viewId} ${params.html?.length || 0} bytes`)
         mainWindow.webContents.send('ext:webviewHtml', params)
         break
       case 'webview.postMessage':
         mainWindow.webContents.send('ext:webviewMessage', params)
         break
       case 'window.webviewViewRegistered':
-        console.log(`[EXT-MSG] ✓ View provider registered: ${params.viewId}`)
+        bridgeLog.info('view_registered', String(params.viewId || ''))
         mainWindow.webContents.send('ext:viewRegistered', params)
         break
       case 'window.webviewPanelCreated':
-        console.log(`[EXT-MSG] Webview panel created: ${params.title} (${params.viewType})`)
+        bridgeLog.info('webview_panel', `${params.title} (${params.viewType})`)
         mainWindow.webContents.send('ext:webviewPanelCreated', params)
         break
       case 'commands.registered':
         break
       default:
-        console.log(`[EXT-MSG] ${method}`, JSON.stringify(params).slice(0, 100))
+        bridgeLog.debug('rpc', `${method} ${JSON.stringify(params).slice(0, 200)}`)
         break
     }
   })

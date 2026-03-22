@@ -1,5 +1,8 @@
 import type { editor } from 'monaco-editor'
 import defaultTheme, { type VSCodeTheme } from '../themes/default-theme'
+import { createUiLogger, Scopes } from '../lib/logger'
+
+const log = createUiLogger(Scopes.uiThemeEngine)
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -565,7 +568,7 @@ export function applyFullTheme(
       monacoInstance.editor.setTheme(themeId)
       currentThemeId = themeId
     } catch (err) {
-      console.warn('[theme-engine] Monaco theme apply error (CSS vars still applied):', err)
+      log.warn('monaco_theme_apply', err instanceof Error ? err.message : String(err))
     }
   }
 

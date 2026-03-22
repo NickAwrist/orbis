@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react'
 import { PanelState, WorkspaceState, useIDEStore } from '../../stores/workspace.store'
 import type { BookmarkNode, BrowserProfile } from '../../types/electron'
+import { createUiLogger, Scopes } from '../../lib/logger'
 import { BookmarkTree } from './BookmarkTree'
+
+const log = createUiLogger(Scopes.uiPanelBrowser)
 import { BrowserImportModal } from './BrowserImportModal'
 import { BrowserToolbar } from './BrowserToolbar'
 
@@ -54,13 +57,9 @@ export function BrowserPanel({ panel, workspace: _workspace }: Props) {
     const container = containerRef.current
     if (!container || webviewRef.current) return
 
-    console.log(
-      '[DEBUG] BrowserPanel mount effect running for panel',
-      panel.id,
-      'partition:',
-      `persist:browser`,
-      'src:',
-      savedUrl,
+    log.debug(
+      'webview_mount',
+      `${panel.id} partition=persist:browser src=${savedUrl}`,
     )
 
     const wv = document.createElement('webview') as unknown as ElectronWebview
@@ -79,7 +78,7 @@ export function BrowserPanel({ panel, workspace: _workspace }: Props) {
     const handleNavigation = () => {
       try {
         const currentUrl = wv.getURL()
-        console.log(`[DEBUG] BrowserPanel handleNavigation fired. currentUrl:`, currentUrl)
+        log.debug('navigation', currentUrl)
         if (!currentUrl || currentUrl === 'about:blank' || currentUrl === 'data:,') return
 
         setDisplayUrl(currentUrl)
@@ -87,13 +86,13 @@ export function BrowserPanel({ panel, workspace: _workspace }: Props) {
         setCanGoForward(wv.canGoForward())
 
         if (componentStateRef.current?.url !== currentUrl) {
-          console.log('[DEBUG] BrowserPanel calling updatePanel for url:', currentUrl)
+          log.debug('persist_url', currentUrl)
           updatePanel(panel.id, {
             componentState: { ...componentStateRef.current, url: currentUrl },
           })
         }
       } catch (err) {
-        console.error('[DEBUG] BrowserPanel handleNavigation error:', err)
+        log.error('navigation_error', err instanceof Error ? err.message : String(err))
       }
     }
 
@@ -107,7 +106,7 @@ export function BrowserPanel({ panel, workspace: _workspace }: Props) {
     webviewRef.current = wv
 
     return () => {
-      console.log('[DEBUG] BrowserPanel unmounting cleanup for panel', panel.id)
+      log.debug('webview_unmount', panel.id)
       wv.removeEventListener('did-start-loading', onStartLoading)
       wv.removeEventListener('did-stop-loading', onStopLoading)
       wv.removeEventListener('did-navigate', handleNavigation)
@@ -160,7 +159,7 @@ export function BrowserPanel({ panel, workspace: _workspace }: Props) {
       const detected = await window.electronAPI.browser.detectProfiles()
       setProfiles(detected)
     } catch (err) {
-      console.error('Failed to detect profiles:', err)
+      log.error('detect_profiles_failed', err instanceof Error ? err.message : String(err))
     }
   }, [])
 

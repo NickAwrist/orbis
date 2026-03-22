@@ -71,6 +71,16 @@ export interface GitRemoteOriginInfo {
   pullsLabel: 'Pull requests' | 'Merge requests'
 }
 
+export type AppLogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export interface AppLogEntry {
+  ts: string
+  level: AppLogLevel
+  scope: string
+  message: string
+  detail?: string
+}
+
 export interface ElectronAPI {
   window: {
     minimize: () => void
@@ -169,6 +179,13 @@ export interface ElectronAPI {
     onWebviewMessage: (callback: (data: { viewId: string; message: any }) => void) => () => void
     onViewRegistered: (callback: (data: { viewId: string }) => void) => () => void
     onWebviewPanelCreated: (callback: (data: { panelId: string; viewType: string; title: string }) => void) => () => void
+  }
+  appLog: {
+    write: (level: AppLogLevel, scope: string, message: string, detail?: string) => void
+    getRecent: () => Promise<AppLogEntry[]>
+    clearBuffer: () => Promise<boolean>
+    revealLogFile: () => Promise<boolean>
+    onEntry: (callback: (entry: AppLogEntry) => void) => () => void
   }
 }
 

@@ -3,6 +3,11 @@ import path from 'path'
 import fs from 'fs'
 import { app } from 'electron'
 import type { InstalledExtension } from './extension.service'
+import { forScope } from '../logging/app-logger'
+import { Scopes } from '../logging/scopes'
+
+const hostLog = forScope(Scopes.mainExtensionHost)
+const hostProcLog = forScope(Scopes.mainExtensionHostProcess)
 
 interface RpcMessage {
   id?: number
@@ -126,7 +131,7 @@ export class ExtensionHostService {
         const detail = stderr
           ? `\nStderr output:\n${stderr.slice(-1000)}`
           : ''
-        console.error(`Extension host exited (code=${code}, signal=${signal})${detail}`)
+        hostLog.error('process_exit', `code=${code} signal=${signal}${detail}`)
         if (this.process === child) {
           this.process = null
           for (const [, pending] of this.pendingRequests) {
@@ -138,7 +143,7 @@ export class ExtensionHostService {
       })
 
       child.on('error', (err) => {
-        console.error('Extension host spawn error:', err)
+        hostLog.error('spawn_error', err instanceof Error ? err.message : String(err))
         fail(`Failed to start extension host process: ${err.message}`)
       })
 
@@ -146,11 +151,11 @@ export class ExtensionHostService {
         const text = data.toString()
         this.stderrBuffer.push(text)
         if (this.stderrBuffer.length > 50) this.stderrBuffer.shift()
-        console.error('[ext-host stderr]', text)
+        hostProcLog.warn('stderr', text.trimEnd())
       })
 
       child.stdout?.on('data', (data) => {
-        console.log('[ext-host stdout]', data.toString())
+        hostProcLog.debug('stdout', data.toString().trimEnd())
       })
 
       setTimeout(() => {

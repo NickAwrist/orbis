@@ -4,6 +4,7 @@
  */
 
 type Listener = (...args: any[]) => any
+type Thenable<T> = PromiseLike<T>
 
 let sendToMain: (method: string, params: any) => void = () => {}
 

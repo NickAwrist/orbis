@@ -9,6 +9,9 @@ import { InstalledTab } from './InstalledTab'
 import { MarketplaceDetailView } from './MarketplaceDetailView'
 import { MarketplaceTab } from './MarketplaceTab'
 import { ThemesTab } from './ThemesTab'
+import { createUiLogger, Scopes } from '../../lib/logger'
+
+const log = createUiLogger(Scopes.uiModalExtensions)
 
 export function ExtensionsModal() {
   const isExtensionsOpen = useIDEStore((s) => s.isExtensionsOpen)
@@ -51,7 +54,7 @@ export function ExtensionsModal() {
       const list = await window.electronAPI.extensions.listInstalled()
       setInstalled(list)
     } catch (err: unknown) {
-      console.error('Failed to load installed extensions:', err)
+      log.error('load_installed_failed', err instanceof Error ? err.message : String(err))
     }
   }, [isExtensionsOpen])
 
@@ -61,7 +64,7 @@ export function ExtensionsModal() {
       const list = await window.electronAPI.extensions.getThemes()
       setThemes(list)
     } catch (err: unknown) {
-      console.error('Failed to load themes:', err)
+      log.error('load_themes_failed', err instanceof Error ? err.message : String(err))
     }
   }, [isExtensionsOpen])
 

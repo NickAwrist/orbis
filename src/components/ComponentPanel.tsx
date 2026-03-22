@@ -99,7 +99,6 @@ export function ComponentPanel({
         {panel.type === 't3-code' && (
           <button
             className="panel__close"
-            style={{ fontSize: '14px' }}
             onClick={(e) => {
               e.stopPropagation()
               window.dispatchEvent(new CustomEvent('reload-t3-panel', { detail: { id: panel.id } }))

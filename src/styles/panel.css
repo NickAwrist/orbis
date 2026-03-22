@@ -14,39 +14,46 @@
 .panel__titlebar {
   display: flex;
   align-items: center;
-  height: 32px;
-  padding: 0 8px;
-  background: var(--bg-toolbar);
+  min-height: 22px;
+  height: 22px;
+  padding: 0 4px 0 6px;
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   cursor: grab;
   user-select: none;
   flex-shrink: 0;
-  gap: 6px;
+  gap: 4px;
 }
 .panel__titlebar:active {
   cursor: grabbing;
 }
 
 .panel__icon {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
 .panel__title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
   flex: 1;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .panel__close {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
-  font-size: 14px;
+  border-radius: 2px;
+  font-size: 12px;
+  line-height: 1;
   color: var(--text-muted);
   transition:
     background var(--motion-duration-sm) var(--motion-ease-standard),

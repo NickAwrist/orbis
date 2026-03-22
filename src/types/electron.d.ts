@@ -63,6 +63,14 @@ export interface ThemeInfo {
   themePath: string
 }
 
+export interface GitRemoteOriginInfo {
+  raw: string
+  repoUrl: string
+  issuesUrl: string
+  pullsUrl: string
+  pullsLabel: 'Pull requests' | 'Merge requests'
+}
+
 export interface ElectronAPI {
   window: {
     minimize: () => void
@@ -99,6 +107,10 @@ export interface ElectronAPI {
     commit: (cwd: string, message: string) => Promise<any>
     log: (cwd: string, maxCount?: number) => Promise<any>
     diff: (cwd: string, file?: string) => Promise<string>
+    getRemoteOriginInfo: (cwd: string) => Promise<GitRemoteOriginInfo | null>
+  }
+  shell: {
+    openExternal: (url: string) => Promise<void>
   }
   workspace: {
     loadAll: () => Promise<any[]>

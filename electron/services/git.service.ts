@@ -1,6 +1,7 @@
 import simpleGit, { SimpleGit } from 'simple-git'
 import fs from 'fs/promises'
 import path from 'path'
+import { parseGitRemoteToWebInfo, type GitRemoteWebInfo } from '../utils/git-remote-origin'
 
 export interface GitStatusResult {
   isRepo: boolean
@@ -25,9 +26,28 @@ export interface GitLogEntry {
   author_email: string
 }
 
+export interface GitRemoteOriginInfo extends GitRemoteWebInfo {
+  raw: string
+}
+
 export class GitService {
   private getGit(cwd: string): SimpleGit {
     return simpleGit(cwd)
+  }
+
+  private normalizeCwd(cwd: string): string {
+    const n = path.normalize(cwd.trim())
+    return n.replace(/[/\\]+$/, '') || n
+  }
+
+  /** Directory containing the `.git` dir (works when workspace is a subfolder of the repo). */
+  private async resolveGitRoot(cwd: string): Promise<string | null> {
+    try {
+      const top = String(await this.getGit(cwd).raw(['rev-parse', '--show-toplevel'])).trim()
+      return top ? this.normalizeCwd(top) : null
+    } catch {
+      return null
+    }
   }
 
   async isGitRepo(cwd: string): Promise<boolean> {
@@ -143,5 +163,42 @@ export class GitService {
     } catch {
       return ''
     }
+  }
+
+  async getRemoteOriginInfo(cwd: string): Promise<GitRemoteOriginInfo | null> {
+    const rootPath = this.normalizeCwd(cwd)
+    const isRepo = await this.isGitRepo(rootPath)
+    if (!isRepo) return null
+
+    const gitRoot = (await this.resolveGitRoot(rootPath)) || rootPath
+    const git = this.getGit(gitRoot)
+
+    const tryUrl = async (name: string): Promise<string | null> => {
+      try {
+        const u = String(await git.raw(['remote', 'get-url', name])).trim()
+        return u || null
+      } catch {
+        return null
+      }
+    }
+
+    let raw: string | null = await tryUrl('origin')
+    if (!raw) {
+      try {
+        const list = String(await git.raw(['remote'])).trim()
+        const names = list.split(/\s+/).filter(Boolean)
+        for (const name of names) {
+          raw = await tryUrl(name)
+          if (raw) break
+        }
+      } catch {
+        return null
+      }
+    }
+
+    if (!raw) return null
+    const parsed = parseGitRemoteToWebInfo(raw)
+    if (!parsed) return null
+    return { raw, ...parsed }
   }
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import type { GitRemoteOriginInfo } from '../types/electron'
 import { PanelState, WorkspaceState } from '../stores/workspace.store'
 
 interface FileStatus {
@@ -30,6 +31,7 @@ export function GitPanel({ panel, workspace }: Props) {
   const [loading, setLoading] = useState(false)
   const [initializing, setInitializing] = useState(false)
   const [tab, setTab] = useState<'changes' | 'log'>('changes')
+  const [remoteInfo, setRemoteInfo] = useState<GitRemoteOriginInfo | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -42,12 +44,20 @@ export function GitPanel({ panel, workspace }: Props) {
         setStaged([])
         setUnstaged([])
         setBranch(null)
+        setRemoteInfo(null)
         setLoading(false)
         return
       }
 
       setIsRepo(true)
       setBranch(status.current || 'HEAD')
+
+      try {
+        const remote = await window.electronAPI.git.getRemoteOriginInfo(workspace.rootPath)
+        setRemoteInfo(remote)
+      } catch {
+        setRemoteInfo(null)
+      }
 
       const stagedFiles: FileStatus[] = [
         ...(status.created || []).map((p: string) => ({ path: p, index: 'A', working_dir: ' ' })),
@@ -68,6 +78,7 @@ export function GitPanel({ panel, workspace }: Props) {
       setUnstaged(filteredUnstaged)
     } catch (err: any) {
       setError(err.message || 'Failed to get git status')
+      setRemoteInfo(null)
     }
     setLoading(false)
   }, [workspace.rootPath])
@@ -225,6 +236,32 @@ export function GitPanel({ panel, workspace }: Props) {
           &#x21BB;
         </button>
       </div>
+
+      {remoteInfo && (
+        <div className="git-panel__remote" title={remoteInfo.raw}>
+          <button
+            type="button"
+            className="git-panel__remote-link"
+            onClick={() => void window.electronAPI.shell.openExternal(remoteInfo.repoUrl)}
+          >
+            Repository
+          </button>
+          <button
+            type="button"
+            className="git-panel__remote-link"
+            onClick={() => void window.electronAPI.shell.openExternal(remoteInfo.issuesUrl)}
+          >
+            Issues
+          </button>
+          <button
+            type="button"
+            className="git-panel__remote-link"
+            onClick={() => void window.electronAPI.shell.openExternal(remoteInfo.pullsUrl)}
+          >
+            {remoteInfo.pullsLabel}
+          </button>
+        </div>
+      )}
 
       {tab === 'changes' && (
         <div className="git-panel__changes">

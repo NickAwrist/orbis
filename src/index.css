@@ -674,6 +674,32 @@ input, textarea {
   color: var(--accent);
 }
 
+.git-panel__remote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.git-panel__remote-link {
+  font-size: 11px;
+  color: var(--accent);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.git-panel__remote-link:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--accent);
+}
+
 .git-panel__changes {
   flex: 1;
   overflow-y: auto;

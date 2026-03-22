@@ -62,6 +62,12 @@ const api = {
       ipcRenderer.invoke('git:log', { cwd, maxCount }),
     diff: (cwd: string, file?: string) =>
       ipcRenderer.invoke('git:diff', { cwd, file }),
+    getRemoteOriginInfo: (cwd: string) =>
+      ipcRenderer.invoke('git:getRemoteOriginInfo', cwd),
+  },
+
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   },
 
   // Workspace persistence

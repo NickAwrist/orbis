@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, protocol } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, protocol, shell } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { PtyService } from './services/pty.service'
@@ -181,6 +181,9 @@ function registerIpcHandlers() {
   ipcMain.handle('git:diff', (_e, { cwd, file }: { cwd: string; file?: string }) => {
     return gitService.diff(cwd, file)
   })
+  ipcMain.handle('git:getRemoteOriginInfo', (_e, cwd: string) => gitService.getRemoteOriginInfo(cwd))
+
+  ipcMain.handle('shell:openExternal', (_e, url: string) => shell.openExternal(url))
 
   // Workspace persistence
   ipcMain.handle('workspace:loadAll', () => workspaceService.loadAll())

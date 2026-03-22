@@ -1,6 +1,28 @@
 import { useState, useEffect, useRef } from 'react'
 import { PanelState, WorkspaceState, useIDEStore } from '../stores/workspace.store'
 
+/** Poll until TCP accepts HTTP on this port (npx/t3 can take minutes on first run). Uses no-cors so CORS headers are not required. */
+async function waitForLocalServer(
+  port: number,
+  opts: { intervalMs?: number; maxWaitMs?: number; isCancelled?: () => boolean } = {},
+): Promise<boolean> {
+  const intervalMs = opts.intervalMs ?? 400
+  const maxWaitMs = opts.maxWaitMs ?? 180_000
+  const baseUrl = `http://127.0.0.1:${port}/`
+  const started = Date.now()
+  while (Date.now() - started < maxWaitMs) {
+    if (opts.isCancelled?.()) return false
+    try {
+      await fetch(baseUrl, { method: 'GET', mode: 'no-cors', cache: 'no-store' })
+      return true
+    } catch {
+      /* connection refused or network error */
+    }
+    await new Promise((r) => setTimeout(r, intervalMs))
+  }
+  return false
+}
+
 interface Props {
   panel: PanelState
   workspace: WorkspaceState
@@ -10,62 +32,77 @@ export function T3CodePanel({ panel, workspace }: Props) {
   const [url, setUrl] = useState<string | null>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [isStarting, setIsStarting] = useState(true) // assume starting until we verify
-  
+  const [startTimedOut, setStartTimedOut] = useState(false)
+
   const ptyIdRef = useRef<string | null>(null)
   const webviewRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const failLoadRetriesRef = useRef(0)
   const updatePanel = useIDEStore((s) => s.updatePanel)
 
   useEffect(() => {
     let isMounted = true
 
     const startServer = async () => {
+      setStartTimedOut(false)
       try {
         const ptyId = await window.electronAPI.pty.create({
           cols: 100,
           rows: 30,
           cwd: workspace.rootPath,
         })
-        
+
         if (!isMounted) {
           window.electronAPI.pty.dispose(ptyId)
           return () => {}
         }
-        
+
         ptyIdRef.current = ptyId
 
         const cleanup = window.electronAPI.pty.onData((id, data) => {
           if (id !== ptyId) return
-          
-          setLogs(prev => {
+
+          setLogs((prev) => {
             const newLogs = [...prev, data]
             return newLogs.slice(-40) // Keep recent logs
           })
         })
 
-        // Use cross-env to set standard port variables so it avoids collisions
         const port = Math.floor(Math.random() * 1000) + 6000
-        
-        // Trust the generated port and unblock the UI after a short startup delay
-        const serverUrl = `http://localhost:${port}`
-        setTimeout(() => {
-          if (isMounted) {
-            setUrl(serverUrl)
-            setIsStarting(false)
-            updatePanel(panel.id, {
-              componentState: { ...panel.componentState, url: serverUrl },
-            })
-          }
-        }, 3500)
+        const serverUrl = `http://127.0.0.1:${port}`
 
-        setTimeout(() => {
-          if (isMounted) {
-             // cross-env is not enough because VITE_DEV_SERVER_URL leaks from the IDE's dev script
-             // and forces T3 Code to redirect to the IDE's frontend! We must delete it from env.
-             const nodeCmd = `node -e "const cp = require('child_process'); delete process.env.VITE_DEV_SERVER_URL; process.env.PORT='${port}'; process.env.T3CODE_PORT='${port}'; process.env.T3CODE_NO_BROWSER='1'; cp.spawnSync('npx', ['-y', 't3', '--no-browser'], {stdio: 'inherit', env: process.env, shell: true})"`
-             window.electronAPI.pty.write(ptyId, nodeCmd + '\r')
+        await new Promise((r) => setTimeout(r, 400))
+        if (!isMounted) {
+          cleanup()
+          window.electronAPI.pty.dispose(ptyId)
+          return () => {}
+        }
+
+        // VITE_DEV_SERVER_URL leaks from the IDE dev script and can redirect T3 to the IDE UI; strip it.
+        const nodeCmd = `node -e "const cp = require('child_process'); delete process.env.VITE_DEV_SERVER_URL; process.env.PORT='${port}'; process.env.T3CODE_PORT='${port}'; process.env.T3CODE_NO_BROWSER='1'; cp.spawnSync('npx', ['-y', 't3', '--no-browser'], {stdio: 'inherit', env: process.env, shell: true})"`
+        window.electronAPI.pty.write(ptyId, nodeCmd + '\r')
+
+        const ready = await waitForLocalServer(port, { isCancelled: () => !isMounted })
+        if (!isMounted) {
+          cleanup()
+          window.electronAPI.pty.dispose(ptyId)
+          return () => {}
+        }
+
+        if (!ready) {
+          setStartTimedOut(true)
+          setIsStarting(false)
+          return () => {
+            cleanup()
+            window.electronAPI.pty.dispose(ptyId)
           }
-        }, 400)
+        }
+
+        setUrl(serverUrl)
+        setIsStarting(false)
+        updatePanel(panel.id, {
+          componentState: { ...panel.componentState, url: serverUrl },
+        })
 
         return () => {
           cleanup()
@@ -73,6 +110,8 @@ export function T3CodePanel({ panel, workspace }: Props) {
         }
       } catch (err) {
         console.error('Failed to start T3 Server PTY', err)
+        setIsStarting(false)
+        setStartTimedOut(true)
         return () => {}
       }
     }
@@ -88,6 +127,8 @@ export function T3CodePanel({ panel, workspace }: Props) {
   useEffect(() => {
     if (!url || !containerRef.current || webviewRef.current) return
 
+    failLoadRetriesRef.current = 0
+
     const wv = document.createElement('webview') as any
     wv.setAttribute('partition', `persist:t3-${panel.id}`)
     wv.setAttribute('src', url)
@@ -99,10 +140,38 @@ export function T3CodePanel({ panel, workspace }: Props) {
     wv.style.flex = '1'
     wv.style.backgroundColor = '#1e1e2e'
 
+    const onFailLoad = (e: { errorCode?: number; isMainFrame?: boolean; validatedURL?: string }) => {
+      if (e.isMainFrame === false) return
+      const code = e.errorCode
+      // -102 ERR_CONNECTION_REFUSED, -105 ERR_NAME_NOT_RESOLVED, -106 ERR_CONNECTION_ABORTED
+      const retryable = code === -102 || code === -105 || code === -106
+      if (!retryable || failLoadRetriesRef.current >= 10) return
+      failLoadRetriesRef.current += 1
+      const delay = Math.min(400 * failLoadRetriesRef.current, 5000)
+      setTimeout(() => {
+        try {
+          if (webviewRef.current === wv && url) {
+            wv.loadURL(url)
+          }
+        } catch {
+          /* ignore */
+        }
+      }, delay)
+    }
+
+    const onFinishLoad = () => {
+      failLoadRetriesRef.current = 0
+    }
+
+    wv.addEventListener('did-fail-load', onFailLoad as any)
+    wv.addEventListener('did-finish-load', onFinishLoad)
+
     containerRef.current.appendChild(wv)
     webviewRef.current = wv
 
     return () => {
+      wv.removeEventListener('did-fail-load', onFailLoad as any)
+      wv.removeEventListener('did-finish-load', onFinishLoad)
       if (wv.parentElement) {
         wv.parentElement.removeChild(wv)
       }
@@ -120,11 +189,23 @@ export function T3CodePanel({ panel, workspace }: Props) {
     return () => window.removeEventListener('reload-t3-panel', handleReload)
   }, [panel.id])
 
+  if (startTimedOut && !url) {
+    return (
+      <div style={{ padding: '20px', fontFamily: "'Cascadia Code', 'Consolas', monospace", color: '#cdd6f4', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e2e', fontSize: '13px' }}>
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>T3 Code did not become ready in time</h3>
+        <p style={{ margin: '0 0 16px 0', color: '#a6adc8' }}>Check the log below, then use the panel reload action or restart the workspace.</p>
+        <div style={{ flex: 1, backgroundColor: '#11111b', padding: '16px', borderRadius: '6px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+          {logs.join('')}
+        </div>
+      </div>
+    )
+  }
+
   if (isStarting || !url) {
     return (
       <div style={{ padding: '20px', fontFamily: "'Cascadia Code', 'Consolas', monospace", color: '#cdd6f4', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1e1e2e', fontSize: '13px' }}>
         <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Starting T3 Code Server...</h3>
-        <p style={{ margin: '0 0 16px 0', color: '#a6adc8' }}>Spawning background server via npx -y t3.</p>
+        <p style={{ margin: '0 0 16px 0', color: '#a6adc8' }}>Waiting for the server to accept connections (first run can take several minutes).</p>
         <div style={{ flex: 1, backgroundColor: '#11111b', padding: '16px', borderRadius: '6px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
           {logs.join('')}
         </div>

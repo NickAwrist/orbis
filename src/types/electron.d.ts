@@ -114,6 +114,16 @@ export interface ElectronAPI {
   }
   workspace: {
     loadAll: () => Promise<any[]>
+    loadSession: () => Promise<{
+      openWorkspaceIds: string[]
+      activeWorkspaceId: string | null
+    } | null>
+    saveSession: (data: {
+      openWorkspaceIds: string[]
+      activeWorkspaceId: string | null
+    }) => Promise<void>
+    loadById: (id: string) => Promise<any | null>
+    listSummaries: () => Promise<Array<{ id: string; name: string; rootPath: string }>>
     save: (data: any) => Promise<void>
     delete: (id: string) => Promise<void>
   }

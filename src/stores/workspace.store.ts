@@ -31,7 +31,10 @@ interface IDEStore {
 
   // Workspace CRUD
   addWorkspace: (name: string, rootPath: string) => void
-  removeWorkspace: (id: string) => void
+  closeWorkspace: (id: string) => Promise<void>
+  openWorkspace: (id: string) => Promise<void>
+  deleteWorkspacePermanently: (id: string) => Promise<void>
+  renameWorkspace: (id: string, name: string) => Promise<void>
   setActiveWorkspace: (id: string) => void
   getActiveWorkspace: () => WorkspaceState | undefined
   setExtensionsOpen: (val: boolean) => void
@@ -55,6 +58,23 @@ let saveTimeout: ReturnType<typeof setTimeout> | null = null
 function debouncedSave(store: IDEStore) {
   if (saveTimeout) clearTimeout(saveTimeout)
   saveTimeout = setTimeout(() => store.saveToDisk(), 500)
+}
+
+function clearSaveDebounce() {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout)
+    saveTimeout = null
+  }
+}
+
+function maxZIndexFromWorkspaces(workspaces: WorkspaceState[]): number {
+  let maxZ = 1
+  for (const ws of workspaces) {
+    for (const p of ws.panels) {
+      if (p.zIndex > maxZ) maxZ = p.zIndex
+    }
+  }
+  return maxZ
 }
 
 const PANEL_DEFAULTS: Record<PanelType, { width: number; height: number }> = {
@@ -87,7 +107,42 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
     debouncedSave(get())
   },
 
-  removeWorkspace: (id) => {
+  closeWorkspace: async (id) => {
+    clearSaveDebounce()
+    await get().saveToDisk()
+    set((s) => {
+      const filtered = s.workspaces.filter((w) => w.id !== id)
+      const nextActive =
+        s.activeWorkspaceId === id ? filtered[0]?.id ?? null : s.activeWorkspaceId
+      return {
+        workspaces: filtered,
+        activeWorkspaceId: nextActive,
+      }
+    })
+    await get().saveToDisk()
+  },
+
+  openWorkspace: async (id) => {
+    const { workspaces } = get()
+    if (workspaces.some((w) => w.id === id)) {
+      set({ activeWorkspaceId: id })
+      debouncedSave(get())
+      return
+    }
+    const raw = await window.electronAPI.workspace.loadById(id)
+    if (!raw) return
+    const ws = raw as WorkspaceState
+    set((s) => ({
+      workspaces: [...s.workspaces, ws],
+      activeWorkspaceId: id,
+      maxZIndex: Math.max(s.maxZIndex, maxZIndexFromWorkspaces([ws])),
+    }))
+    debouncedSave(get())
+  },
+
+  deleteWorkspacePermanently: async (id) => {
+    clearSaveDebounce()
+    await get().saveToDisk()
     set((s) => {
       const filtered = s.workspaces.filter((w) => w.id !== id)
       return {
@@ -98,8 +153,36 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
             : s.activeWorkspaceId,
       }
     })
-    window.electronAPI?.workspace.delete(id)
-    debouncedSave(get())
+    try {
+      await window.electronAPI.workspace.delete(id)
+    } catch {
+      // ignore
+    }
+    await get().saveToDisk()
+  },
+
+  renameWorkspace: async (id, name) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    const { workspaces } = get()
+    const existing = workspaces.find((w) => w.id === id)
+    if (existing) {
+      set((s) => ({
+        workspaces: s.workspaces.map((w) =>
+          w.id === id ? { ...w, name: trimmed } : w,
+        ),
+      }))
+      debouncedSave(get())
+      return
+    }
+    const raw = await window.electronAPI.workspace.loadById(id)
+    if (!raw) return
+    const ws = { ...raw, name: trimmed }
+    try {
+      await window.electronAPI.workspace.save(ws)
+    } catch {
+      // ignore
+    }
   },
 
   setActiveWorkspace: (id) => {
@@ -197,33 +280,63 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
 
   loadFromDisk: async () => {
     try {
-      const loaded = await window.electronAPI.workspace.loadAll()
-      if (loaded.length > 0) {
-        let maxZ = 1
-        loaded.forEach((ws: WorkspaceState) =>
-          ws.panels.forEach((p) => {
-            if (p.zIndex > maxZ) maxZ = p.zIndex
-          }),
-        )
-        set({
-          workspaces: loaded,
-          activeWorkspaceId: loaded[0].id,
-          maxZIndex: maxZ,
-        })
+      const session = await window.electronAPI.workspace.loadSession()
+      if (!session) return
+
+      const loaded: WorkspaceState[] = []
+      for (const id of session.openWorkspaceIds) {
+        const w = await window.electronAPI.workspace.loadById(id)
+        if (w) loaded.push(w as WorkspaceState)
+      }
+
+      let activeId = session.activeWorkspaceId
+      if (activeId && !loaded.some((w) => w.id === activeId)) {
+        activeId = loaded[0]?.id ?? null
+      }
+      if (!activeId && loaded.length > 0) activeId = loaded[0].id
+
+      const openIds = loaded.map((w) => w.id)
+      const sessionDirty =
+        openIds.length !== session.openWorkspaceIds.length ||
+        session.activeWorkspaceId !== activeId
+
+      set({
+        workspaces: loaded,
+        activeWorkspaceId: activeId,
+        maxZIndex: Math.max(1, maxZIndexFromWorkspaces(loaded)),
+      })
+
+      if (sessionDirty) {
+        try {
+          await window.electronAPI.workspace.saveSession({
+            openWorkspaceIds: openIds,
+            activeWorkspaceId: activeId,
+          })
+        } catch {
+          // ignore
+        }
       }
     } catch {
-      // first run, no saved data
+      // first run or IPC unavailable
     }
   },
 
   saveToDisk: async () => {
-    const { workspaces } = get()
+    const { workspaces, activeWorkspaceId } = get()
     for (const ws of workspaces) {
       try {
         await window.electronAPI.workspace.save(ws)
       } catch {
         // save failed silently
       }
+    }
+    try {
+      await window.electronAPI.workspace.saveSession({
+        openWorkspaceIds: workspaces.map((w) => w.id),
+        activeWorkspaceId,
+      })
+    } catch {
+      // ignore
     }
   },
 }))

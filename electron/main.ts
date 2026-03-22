@@ -187,6 +187,12 @@ function registerIpcHandlers() {
 
   // Workspace persistence
   ipcMain.handle('workspace:loadAll', () => workspaceService.loadAll())
+  ipcMain.handle('workspace:loadSession', () => workspaceService.loadSession())
+  ipcMain.handle('workspace:saveSession', (_e, data: any) =>
+    workspaceService.saveSession(data),
+  )
+  ipcMain.handle('workspace:loadById', (_e, id: string) => workspaceService.loadById(id))
+  ipcMain.handle('workspace:listSummaries', () => workspaceService.listSummaries())
   ipcMain.handle('workspace:save', (_e, data: any) => workspaceService.save(data))
   ipcMain.handle('workspace:delete', (_e, id: string) => workspaceService.delete(id))
 

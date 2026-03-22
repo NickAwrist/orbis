@@ -73,6 +73,11 @@ const api = {
   // Workspace persistence
   workspace: {
     loadAll: () => ipcRenderer.invoke('workspace:loadAll'),
+    loadSession: () => ipcRenderer.invoke('workspace:loadSession'),
+    saveSession: (data: { openWorkspaceIds: string[]; activeWorkspaceId: string | null }) =>
+      ipcRenderer.invoke('workspace:saveSession', data),
+    loadById: (id: string) => ipcRenderer.invoke('workspace:loadById', id),
+    listSummaries: () => ipcRenderer.invoke('workspace:listSummaries'),
     save: (data: any) => ipcRenderer.invoke('workspace:save', data),
     delete: (id: string) => ipcRenderer.invoke('workspace:delete', id),
   },

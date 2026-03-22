@@ -1,23 +1,28 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { useIDEStore } from '../stores/workspace.store'
+import { WorkspaceManagerModal } from './WorkspaceManagerModal'
 
 export function WorkspaceSwitcher() {
   const workspaces = useIDEStore((s) => s.workspaces)
   const activeId = useIDEStore((s) => s.activeWorkspaceId)
   const setActive = useIDEStore((s) => s.setActiveWorkspace)
-  const addWorkspace = useIDEStore((s) => s.addWorkspace)
-  const removeWorkspace = useIDEStore((s) => s.removeWorkspace)
-  const [showNew, setShowNew] = useState(false)
-  const [newName, setNewName] = useState('')
+  const closeWorkspace = useIDEStore((s) => s.closeWorkspace)
+  const deleteWorkspacePermanently = useIDEStore((s) => s.deleteWorkspacePermanently)
+  const [modalOpen, setModalOpen] = useState(false)
 
-  const handleNew = useCallback(async () => {
-    const dir = await window.electronAPI.dialog.openDirectory()
-    if (!dir) return
-    const name = newName.trim() || dir.split(/[\\/]/).pop() || 'Untitled'
-    addWorkspace(name, dir)
-    setNewName('')
-    setShowNew(false)
-  }, [newName, addWorkspace])
+  const handleTabContextMenu = useCallback(
+    (e: MouseEvent, id: string) => {
+      e.preventDefault()
+      if (
+        window.confirm(
+          'Delete this workspace permanently? Saved layout on disk will be removed.',
+        )
+      ) {
+        void deleteWorkspacePermanently(id)
+      }
+    },
+    [deleteWorkspacePermanently],
+  )
 
   // Ctrl+1..9 to switch workspaces, Ctrl+Tab to cycle
   useEffect(() => {
@@ -43,13 +48,15 @@ export function WorkspaceSwitcher() {
 
   return (
     <div className="workspace-switcher">
+      <WorkspaceManagerModal open={modalOpen} onClose={() => setModalOpen(false)} />
       <div className="workspace-switcher__tabs">
         {workspaces.map((ws, idx) => (
           <div
             key={ws.id}
             className={`workspace-switcher__tab ${ws.id === activeId ? 'workspace-switcher__tab--active' : ''}`}
             onClick={() => setActive(ws.id)}
-            title={ws.rootPath}
+            onContextMenu={(e) => handleTabContextMenu(e, ws.id)}
+            title={`${ws.rootPath}\nRight-click: delete permanently`}
           >
             <span className="workspace-switcher__tab-index">{idx + 1}</span>
             <span className="workspace-switcher__tab-name">{ws.name}</span>
@@ -57,46 +64,21 @@ export function WorkspaceSwitcher() {
               className="workspace-switcher__tab-close"
               onClick={(e) => {
                 e.stopPropagation()
-                removeWorkspace(ws.id)
+                void closeWorkspace(ws.id)
               }}
-              title="Close workspace"
+              title="Close workspace (keeps saved state)"
             >
               ×
             </button>
           </div>
         ))}
-        {showNew ? (
-          <div className="workspace-switcher__new-form">
-            <input
-              className="workspace-switcher__new-input"
-              placeholder="Name (optional)"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleNew()
-                if (e.key === 'Escape') setShowNew(false)
-              }}
-              autoFocus
-            />
-            <button className="workspace-switcher__new-browse" onClick={handleNew}>
-              Browse...
-            </button>
-            <button
-              className="workspace-switcher__new-cancel"
-              onClick={() => setShowNew(false)}
-            >
-              ×
-            </button>
-          </div>
-        ) : (
-          <button
-            className="workspace-switcher__add"
-            onClick={() => setShowNew(true)}
-            title="New workspace"
-          >
-            +
-          </button>
-        )}
+        <button
+          className="workspace-switcher__add"
+          onClick={() => setModalOpen(true)}
+          title="New or open workspace"
+        >
+          +
+        </button>
       </div>
     </div>
   )

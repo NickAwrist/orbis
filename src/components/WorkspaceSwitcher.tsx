@@ -1,6 +1,27 @@
-import { useCallback, useEffect, useState, type MouseEvent } from 'react'
-import { useIDEStore } from '../stores/workspace.store'
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useIDEStore, type WorkspaceState } from '../stores/workspace.store'
 import { WorkspaceManagerModal } from './WorkspaceManagerModal'
+
+type TabRow =
+  | { kind: 'live'; ws: WorkspaceState }
+  | { kind: 'ghost'; ws: WorkspaceState }
+
+function mergeTabs(
+  workspaces: WorkspaceState[],
+  leaving: { ws: WorkspaceState; insertIndex: number } | null,
+): TabRow[] {
+  if (!leaving) return workspaces.map((ws) => ({ kind: 'live' as const, ws }))
+  const { ws: ghost, insertIndex } = leaving
+  const out: TabRow[] = []
+  for (let i = 0; i < insertIndex; i++) {
+    if (workspaces[i]) out.push({ kind: 'live', ws: workspaces[i] })
+  }
+  out.push({ kind: 'ghost', ws: ghost })
+  for (let i = insertIndex; i < workspaces.length; i++) {
+    out.push({ kind: 'live', ws: workspaces[i] })
+  }
+  return out
+}
 
 export function WorkspaceSwitcher() {
   const workspaces = useIDEStore((s) => s.workspaces)
@@ -9,6 +30,34 @@ export function WorkspaceSwitcher() {
   const closeWorkspace = useIDEStore((s) => s.closeWorkspace)
   const deleteWorkspacePermanently = useIDEStore((s) => s.deleteWorkspacePermanently)
   const [modalOpen, setModalOpen] = useState(false)
+
+  const prevWorkspacesRef = useRef<WorkspaceState[]>([])
+  const exitQueueRef = useRef<{ ws: WorkspaceState; insertIndex: number }[]>([])
+  const [leaving, setLeaving] = useState<{ ws: WorkspaceState; insertIndex: number } | null>(null)
+
+  useEffect(() => {
+    const prev = prevWorkspacesRef.current
+    const nextIds = new Set(workspaces.map((w) => w.id))
+    const removed = prev.filter((w) => !nextIds.has(w.id))
+    for (const w of removed) {
+      exitQueueRef.current.push({ ws: w, insertIndex: prev.indexOf(w) })
+    }
+    if (removed.length) {
+      setLeaving((cur) => cur ?? exitQueueRef.current.shift() ?? null)
+    }
+    prevWorkspacesRef.current = workspaces
+  }, [workspaces])
+
+  const handleExitAnimationEnd = useCallback(() => {
+    setLeaving(exitQueueRef.current.shift() ?? null)
+  }, [])
+
+  useEffect(() => {
+    if (!leaving) return
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = window.setTimeout(() => handleExitAnimationEnd(), 1)
+    return () => clearTimeout(t)
+  }, [leaving, handleExitAnimationEnd])
 
   const handleTabContextMenu = useCallback(
     (e: MouseEvent, id: string) => {
@@ -24,7 +73,6 @@ export function WorkspaceSwitcher() {
     [deleteWorkspacePermanently],
   )
 
-  // Ctrl+1..9 to switch workspaces, Ctrl+Tab to cycle
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && !e.shiftKey && !e.altKey) {
@@ -46,32 +94,52 @@ export function WorkspaceSwitcher() {
     return () => window.removeEventListener('keydown', handler)
   }, [workspaces, activeId, setActive])
 
+  const rows = mergeTabs(workspaces, leaving)
+
   return (
     <div className="workspace-switcher">
       <WorkspaceManagerModal open={modalOpen} onClose={() => setModalOpen(false)} />
       <div className="workspace-switcher__tabs">
-        {workspaces.map((ws, idx) => (
-          <div
-            key={ws.id}
-            className={`workspace-switcher__tab ${ws.id === activeId ? 'workspace-switcher__tab--active' : ''}`}
-            onClick={() => setActive(ws.id)}
-            onContextMenu={(e) => handleTabContextMenu(e, ws.id)}
-            title={`${ws.rootPath}\nRight-click: delete permanently`}
-          >
-            <span className="workspace-switcher__tab-index">{idx + 1}</span>
-            <span className="workspace-switcher__tab-name">{ws.name}</span>
-            <button
-              className="workspace-switcher__tab-close"
-              onClick={(e) => {
-                e.stopPropagation()
-                void closeWorkspace(ws.id)
-              }}
-              title="Close workspace (keeps saved state)"
+        {rows.map((row, idx) => {
+          const ws = row.ws
+          const isGhost = row.kind === 'ghost'
+          const isActive = !isGhost && ws.id === activeId
+          return (
+            <div
+              key={isGhost ? `ghost-${ws.id}` : ws.id}
+              className={`workspace-switcher__tab ${isActive ? 'workspace-switcher__tab--active' : ''} ${isGhost ? 'workspace-switcher__tab--exiting' : ''}`}
+              onClick={isGhost ? undefined : () => setActive(ws.id)}
+              onContextMenu={isGhost ? undefined : (e) => handleTabContextMenu(e, ws.id)}
+              title={
+                isGhost
+                  ? undefined
+                  : `${ws.rootPath}\nRight-click: delete permanently`
+              }
+              onAnimationEnd={
+                isGhost
+                  ? (e) => {
+                      if (e.animationName === 'workspace-tab-exit') handleExitAnimationEnd()
+                    }
+                  : undefined
+              }
             >
-              ×
-            </button>
-          </div>
-        ))}
+              <span className="workspace-switcher__tab-index">{idx + 1}</span>
+              <span className="workspace-switcher__tab-name">{ws.name}</span>
+              {!isGhost && (
+                <button
+                  className="workspace-switcher__tab-close"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    void closeWorkspace(ws.id)
+                  }}
+                  title="Close workspace (keeps saved state)"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )
+        })}
         <button
           className="workspace-switcher__add"
           onClick={() => setModalOpen(true)}

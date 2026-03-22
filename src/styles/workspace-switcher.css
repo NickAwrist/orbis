@@ -6,9 +6,14 @@
 }
 
 .workspace-switcher__tabs {
+  --ws-tab-enter-duration: 0.44s;
+  --ws-tab-exit-duration: 1s;
+  --ws-tab-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ws-tab-ease-exit: cubic-bezier(0.33, 1, 0.68, 1);
   display: flex;
   align-items: center;
   gap: 2px;
+  min-width: 0;
 }
 
 .workspace-switcher__tab {
@@ -18,8 +23,23 @@
   padding: 4px 10px;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.15s;
   max-width: 180px;
+  min-width: 0;
+  flex-shrink: 1;
+  transform-origin: center left;
+  animation: workspace-tab-enter var(--ws-tab-enter-duration) var(--ws-tab-ease) backwards;
+  transition:
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+.workspace-switcher__tab--exiting {
+  cursor: default;
+  overflow: hidden;
+  animation: workspace-tab-exit var(--ws-tab-exit-duration) var(--ws-tab-ease-exit) forwards;
+  pointer-events: none;
+}
+.workspace-switcher__tab:not(.workspace-switcher__tab--exiting):active {
+  transform: scale(0.99);
 }
 .workspace-switcher__tab:hover {
   background: var(--bg-surface-hover);
@@ -47,9 +67,15 @@
 .workspace-switcher__tab-close {
   font-size: 14px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition:
+    opacity var(--motion-duration-sm) var(--motion-ease-standard),
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
   padding: 0 2px;
   border-radius: 3px;
+}
+.workspace-switcher__tab-close:active {
+  transform: scale(0.9);
 }
 .workspace-switcher__tab:hover .workspace-switcher__tab-close {
   opacity: 0.6;
@@ -69,10 +95,73 @@
   border-radius: var(--radius);
   font-size: 18px;
   color: var(--text-muted);
-  transition: all 0.15s;
+  transition:
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    color var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 .workspace-switcher__add:hover {
   background: var(--bg-surface-hover);
   color: var(--accent);
 }
+.workspace-switcher__add:active {
+  transform: scale(0.92);
+}
 
+@keyframes workspace-tab-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes workspace-tab-exit {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  28% {
+    opacity: 0.9;
+    transform: translateX(-3px) scale(0.99);
+    max-width: 150px;
+    padding-left: 4px;
+    padding-right: 9px;
+    gap: 5px;
+  }
+  58% {
+    opacity: 0.45;
+    transform: translateX(-5px) scale(0.975);
+    max-width: 72px;
+    padding-left: 3px;
+    padding-right: 5px;
+    gap: 3px;
+  }
+  100% {
+    opacity: 0;
+    max-width: 0;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+    margin: 0;
+    transform: translateX(-5px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-switcher__tab {
+    animation: none;
+  }
+  .workspace-switcher__tab--exiting {
+    animation: none;
+    opacity: 0;
+    max-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+  }
+}

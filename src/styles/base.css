@@ -8,6 +8,53 @@
   /* All color variables are set by the theme engine at runtime.
      See src/utils/theme-engine.ts → applyFullTheme() */
   --radius: 6px;
+  --motion-duration-fast: 0.12s;
+  --motion-duration-sm: 0.2s;
+  --motion-duration-md: 0.32s;
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes ui-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ui-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ext-modal-overlay,
+  .ext-modal,
+  .workspace-modal,
+  .add-menu__dropdown,
+  .workspace-modal__menu-popover,
+  .file-context-menu {
+    animation: none !important;
+  }
 }
 
 html, body, #root {

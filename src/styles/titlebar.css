@@ -52,10 +52,16 @@
   justify-content: center;
   border-radius: 4px;
   font-size: 14px;
-  transition: background 0.15s;
+  transition:
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    color var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 .titlebar__btn:hover {
   background: var(--bg-surface-hover);
+}
+.titlebar__btn:active {
+  transform: scale(0.94);
 }
 .titlebar__btn--close:hover {
   background: var(--danger);

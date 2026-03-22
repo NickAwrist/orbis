@@ -10,6 +10,7 @@
   flex-direction: column;
   box-shadow: 0 16px 48px var(--widget-shadow, rgba(0, 0, 0, 0.5));
   overflow: hidden;
+  animation: ui-modal-in var(--motion-duration-md) var(--motion-ease-out) both;
 }
 
 .workspace-modal__header {
@@ -33,10 +34,17 @@
   padding: 2px 8px;
   border-radius: 4px;
   color: var(--text-muted);
+  transition:
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    color var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 .workspace-modal__close:hover {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
+}
+.workspace-modal__close:active {
+  transform: scale(0.92);
 }
 
 .workspace-modal__body {
@@ -105,9 +113,17 @@
   font-weight: 500;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
+  transition:
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    border-color var(--motion-duration-sm) var(--motion-ease-standard),
+    opacity var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 .workspace-modal__btn:hover:not(:disabled) {
   background: var(--bg-surface-hover);
+}
+.workspace-modal__btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .workspace-modal__btn--primary {
@@ -171,6 +187,7 @@
   align-items: stretch;
   min-height: 44px;
   background: var(--bg-surface);
+  transition: background var(--motion-duration-sm) var(--motion-ease-standard);
 }
 .workspace-modal__row:hover {
   background: var(--bg-surface-hover);
@@ -196,6 +213,10 @@
   cursor: pointer;
   font: inherit;
   text-align: left;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+.workspace-modal__row-main:active {
+  transform: scale(0.995);
 }
 
 .workspace-modal__row-title {
@@ -238,6 +259,13 @@
   border: none;
   background: transparent;
   cursor: pointer;
+  transition:
+    background var(--motion-duration-sm) var(--motion-ease-standard),
+    color var(--motion-duration-sm) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+.workspace-modal__menu-trigger:active {
+  transform: scale(0.92);
 }
 .workspace-modal__menu-trigger:hover,
 .workspace-modal__menu-trigger[aria-expanded='true'] {
@@ -258,6 +286,8 @@
   position: fixed;
   z-index: 100000;
   margin: 0;
+  transform-origin: top left;
+  animation: ui-float-in var(--motion-duration-sm) var(--motion-ease-out) both;
 }
 
 .workspace-modal__menu-item {
@@ -271,6 +301,7 @@
   text-align: left;
   cursor: pointer;
   color: var(--text-primary);
+  transition: background var(--motion-duration-sm) var(--motion-ease-standard);
 }
 .workspace-modal__menu-item:hover {
   background: var(--bg-surface-hover);

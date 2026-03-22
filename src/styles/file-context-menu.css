@@ -1,0 +1,35 @@
+/* ===== FILE CONTEXT MENU ===== */
+.file-context-menu {
+  position: absolute;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 4px;
+  min-width: 160px;
+  z-index: 10000;
+  box-shadow: 0 8px 24px var(--widget-shadow, rgba(0, 0, 0, 0.4));
+}
+
+.file-context-menu__item {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  text-align: left;
+  font-size: 12px;
+  border-radius: 3px;
+  transition: background 0.1s;
+}
+.file-context-menu__item:hover {
+  background: var(--bg-surface-hover);
+}
+.file-context-menu__item--danger:hover {
+  background: var(--danger-tint-15);
+  color: var(--danger);
+}
+
+.file-context-menu__divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+

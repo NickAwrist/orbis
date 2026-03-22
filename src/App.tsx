@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { useIDEStore } from './stores/workspace.store'
-import { WorkspaceSwitcher } from './components/WorkspaceSwitcher'
 import { Canvas } from './components/Canvas'
-import { AddComponentMenu } from './components/AddComponentMenu'
+import { TitleBar } from './components/TitleBar'
 import { StatusBar } from './components/StatusBar'
 import { ExtensionsModal } from './components/ExtensionsModal'
 import { initializeDefaultTheme } from './utils/theme-engine'
@@ -64,38 +63,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="titlebar">
-        <div className="titlebar__drag-region" />
-        <div className="titlebar__left">
-          <span className="titlebar__brand">Dynamic IDE</span>
-        </div>
-        <div className="titlebar__center">
-          <WorkspaceSwitcher />
-        </div>
-        <div className="titlebar__right">
-          {activeWs && <AddComponentMenu />}
-          <div className="titlebar__controls">
-            <button
-              className="titlebar__btn"
-              onClick={() => window.electronAPI.window.minimize()}
-            >
-              ─
-            </button>
-            <button
-              className="titlebar__btn"
-              onClick={() => window.electronAPI.window.maximize()}
-            >
-              □
-            </button>
-            <button
-              className="titlebar__btn titlebar__btn--close"
-              onClick={() => window.electronAPI.window.close()}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      </div>
+      <TitleBar showAddComponentMenu={!!activeWs} />
       <div className="app__canvas">
         <Canvas />
       </div>

@@ -1,0 +1,78 @@
+/* ===== WORKSPACE SWITCHER ===== */
+.workspace-switcher {
+  display: flex;
+  align-items: center;
+  -webkit-app-region: no-drag;
+}
+
+.workspace-switcher__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.workspace-switcher__tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s;
+  max-width: 180px;
+}
+.workspace-switcher__tab:hover {
+  background: var(--bg-surface-hover);
+}
+.workspace-switcher__tab--active {
+  background: var(--bg-surface);
+}
+
+.workspace-switcher__tab-index {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-weight: 600;
+}
+
+.workspace-switcher__tab-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-switcher__tab-close {
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+.workspace-switcher__tab:hover .workspace-switcher__tab-close {
+  opacity: 0.6;
+}
+.workspace-switcher__tab-close:hover {
+  opacity: 1 !important;
+  background: var(--danger);
+  color: var(--button-fg, #fff);
+}
+
+.workspace-switcher__add {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  font-size: 18px;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.workspace-switcher__add:hover {
+  background: var(--bg-surface-hover);
+  color: var(--accent);
+}
+

@@ -1,0 +1,74 @@
+/* ===== EDITOR PANEL ===== */
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-panel__tabs {
+  display: flex;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.editor-panel__tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-right: 1px solid var(--border-color);
+  transition: background 0.15s;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.editor-panel__tab:hover {
+  background: var(--bg-surface-hover);
+}
+.editor-panel__tab--active {
+  background: var(--bg-secondary);
+}
+
+.editor-panel__tab-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-panel__tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.editor-panel__tab-close {
+  font-size: 13px;
+  opacity: 0.4;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.editor-panel__tab-close:hover {
+  opacity: 1;
+  background: var(--danger);
+  color: var(--button-fg, #fff);
+}
+
+.editor-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.editor-panel__empty-hint {
+  font-size: 11px;
+}
+

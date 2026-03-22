@@ -1,0 +1,295 @@
+/* ===== WORKSPACE MANAGER MODAL ===== */
+.workspace-modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 540px;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px var(--widget-shadow, rgba(0, 0, 0, 0.5));
+  overflow: hidden;
+}
+
+.workspace-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.workspace-modal__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.workspace-modal__close {
+  font-size: 22px;
+  line-height: 1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+.workspace-modal__close:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.workspace-modal__body {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.workspace-modal__section-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.workspace-modal__field {
+  margin-bottom: 10px;
+}
+
+.workspace-modal__field--row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-modal__label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+}
+
+.workspace-modal__input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+}
+.workspace-modal__input:focus {
+  border-color: var(--accent);
+}
+
+.workspace-modal__path {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-modal__btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+}
+.workspace-modal__btn:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+}
+
+.workspace-modal__btn--primary {
+  margin-top: 8px;
+  width: 100%;
+  background: var(--accent);
+  color: var(--bg-toolbar);
+  border-color: transparent;
+  font-weight: 600;
+}
+.workspace-modal__btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.workspace-modal__btn--primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.workspace-modal__empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.workspace-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.workspace-modal__list-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.workspace-modal__list-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.workspace-modal__list-li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.workspace-modal__list-li:last-child {
+  border-bottom: none;
+}
+
+.workspace-modal__row {
+  display: flex;
+  align-items: stretch;
+  min-height: 44px;
+  background: var(--bg-surface);
+}
+.workspace-modal__row:hover {
+  background: var(--bg-surface-hover);
+}
+.workspace-modal__row--active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-surface));
+}
+.workspace-modal__row--active:hover {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-surface-hover));
+}
+
+.workspace-modal__row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 8px 10px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.workspace-modal__row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.workspace-modal__badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.workspace-modal__row-menu {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding: 6px 8px 6px 0;
+}
+
+.workspace-modal__menu-trigger {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.workspace-modal__menu-trigger:hover,
+.workspace-modal__menu-trigger[aria-expanded='true'] {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.workspace-modal__menu {
+  min-width: 180px;
+  padding: 4px 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px var(--widget-shadow, rgba(0, 0, 0, 0.35));
+}
+
+.workspace-modal__menu-popover {
+  position: fixed;
+  z-index: 100000;
+  margin: 0;
+}
+
+.workspace-modal__menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.workspace-modal__menu-item:hover {
+  background: var(--bg-surface-hover);
+}
+.workspace-modal__menu-item--danger {
+  color: var(--danger);
+}
+.workspace-modal__menu-item--danger:hover {
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg-surface));
+}
+
+.workspace-modal__rename-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  outline: none;
+}
+

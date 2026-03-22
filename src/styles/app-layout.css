@@ -1,0 +1,14 @@
+/* ===== APP LAYOUT ===== */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.app__canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+

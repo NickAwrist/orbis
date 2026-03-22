@@ -1,0 +1,9 @@
+/* ===== SNAP GUIDES ===== */
+.snap-guide {
+  position: absolute;
+  background: var(--accent);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 99999;
+}
+

@@ -1,0 +1,14 @@
+/* ===== TERMINAL PANEL ===== */
+.terminal-panel {
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.terminal-panel .xterm {
+  height: 100%;
+}
+
+.terminal-panel .xterm-viewport {
+  overflow-y: auto !important;
+}
+

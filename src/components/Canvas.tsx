@@ -1,13 +1,34 @@
-import { useCallback, useRef, useState, useEffect } from 'react'
-import { useIDEStore } from '../stores/workspace.store'
+import { useCallback, useRef, useState, useEffect, useMemo } from 'react'
+import {
+  useIDEStore,
+  KEEP_ALIVE_PANEL_TYPES,
+  type WorkspaceState,
+  type PanelState,
+} from '../stores/workspace.store'
 import { ComponentPanel } from './ComponentPanel'
 import { AddComponentMenu } from './AddComponentMenu'
 import { SnapGuide } from '../utils/snap'
 
 export function Canvas() {
-  const activeWs = useIDEStore((s) =>
-    s.workspaces.find((w) => w.id === s.activeWorkspaceId),
+  const workspaces = useIDEStore((s) => s.workspaces)
+  const activeWorkspaceId = useIDEStore((s) => s.activeWorkspaceId)
+  const activeWs = useMemo(
+    () => workspaces.find((w) => w.id === activeWorkspaceId),
+    [workspaces, activeWorkspaceId],
   )
+
+  const keepAliveSet = useMemo(() => new Set(KEEP_ALIVE_PANEL_TYPES), [])
+
+  /** One mount per panel id — visibility toggles with active workspace (no remount on switch). */
+  const keepAlivePanels = useMemo(() => {
+    const out: { workspace: WorkspaceState; panel: PanelState }[] = []
+    for (const w of workspaces) {
+      for (const panel of w.panels) {
+        if (keepAliveSet.has(panel.type)) out.push({ workspace: w, panel })
+      }
+    }
+    return out
+  }, [workspaces, keepAliveSet])
   const canvasRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
   const [guides, setGuides] = useState<SnapGuide[]>([])
@@ -42,16 +63,30 @@ export function Canvas() {
 
   return (
     <div className="canvas" ref={canvasRef}>
-      {activeWs.panels.map((panel) => (
+      {keepAlivePanels.map(({ workspace, panel }) => (
         <ComponentPanel
           key={panel.id}
           panel={panel}
-          workspace={activeWs}
+          workspace={workspace}
           canvasSize={canvasSize}
           onShowGuides={setGuides}
           onClearGuides={clearGuides}
+          keepAliveSlot
+          keepAliveHidden={workspace.id !== activeWorkspaceId}
         />
       ))}
+      {activeWs.panels
+        .filter((p) => !keepAliveSet.has(p.type))
+        .map((panel) => (
+          <ComponentPanel
+            key={panel.id}
+            panel={panel}
+            workspace={activeWs}
+            canvasSize={canvasSize}
+            onShowGuides={setGuides}
+            onClearGuides={clearGuides}
+          />
+        ))}
       {guides.map((g, i) => (
         <div
           key={i}

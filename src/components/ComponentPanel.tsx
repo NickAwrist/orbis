@@ -26,9 +26,20 @@ interface Props {
   canvasSize: { width: number; height: number }
   onShowGuides: (guides: SnapGuide[]) => void
   onClearGuides: () => void
+  /** Terminal / browser / t3-code: single React tree; toggle visibility per active workspace. */
+  keepAliveSlot?: boolean
+  keepAliveHidden?: boolean
 }
 
-export function ComponentPanel({ panel, workspace, canvasSize, onShowGuides, onClearGuides }: Props) {
+export function ComponentPanel({
+  panel,
+  workspace,
+  canvasSize,
+  onShowGuides,
+  onClearGuides,
+  keepAliveSlot = false,
+  keepAliveHidden = false,
+}: Props) {
   const updatePanel = useIDEStore((s) => s.updatePanel)
   const removePanel = useIDEStore((s) => s.removePanel)
   const bringToFront = useIDEStore((s) => s.bringToFront)
@@ -45,8 +56,11 @@ export function ComponentPanel({ panel, workspace, canvasSize, onShowGuides, onC
   }, [allPanels, panel.id])
 
   const onMouseDown = useCallback(() => {
+    if (keepAliveSlot && keepAliveHidden) return
     bringToFront(panel.id)
-  }, [panel.id, bringToFront])
+  }, [panel.id, bringToFront, keepAliveSlot, keepAliveHidden])
+
+  const isHiddenKeepAlive = keepAliveSlot && keepAliveHidden
 
   const renderContent = () => {
     switch (panel.type) {
@@ -74,20 +88,69 @@ export function ComponentPanel({ panel, workspace, canvasSize, onShowGuides, onC
     }
   }
 
+  const innerPanel = (
+    <div className="panel" onMouseDown={isHiddenKeepAlive ? undefined : onMouseDown}>
+      <div className="panel__titlebar">
+        <span className="panel__title">
+          {panel.type === 'extension-view' && panel.componentState?.title
+            ? panel.componentState.title
+            : PANEL_TITLES[panel.type]}
+        </span>
+        {panel.type === 't3-code' && (
+          <button
+            className="panel__close"
+            style={{ fontSize: '14px' }}
+            onClick={(e) => {
+              e.stopPropagation()
+              window.dispatchEvent(new CustomEvent('reload-t3-panel', { detail: { id: panel.id } }))
+            }}
+            title="Reload T3 Code"
+          >
+            ↻
+          </button>
+        )}
+        <button
+          className="panel__close"
+          onClick={(e) => {
+            e.stopPropagation()
+            removePanel(panel.id)
+          }}
+          title="Close panel"
+        >
+          ×
+        </button>
+      </div>
+      <div className="panel__content">{renderContent()}</div>
+    </div>
+  )
+
   return (
     <Rnd
       ref={rndRef}
-      default={{
-        x: panel.x,
-        y: panel.y,
-        width: panel.width,
-        height: panel.height,
+      {...(keepAliveSlot
+        ? {
+            position: { x: isHiddenKeepAlive ? 0 : panel.x, y: isHiddenKeepAlive ? 0 : panel.y },
+            size: { width: panel.width, height: panel.height },
+          }
+        : {
+            default: {
+              x: panel.x,
+              y: panel.y,
+              width: panel.width,
+              height: panel.height,
+            },
+          })}
+      style={{
+        zIndex: isHiddenKeepAlive ? 0 : panel.zIndex,
+        visibility: isHiddenKeepAlive ? 'hidden' : 'visible',
+        pointerEvents: isHiddenKeepAlive ? 'none' : 'auto',
       }}
-      style={{ zIndex: panel.zIndex }}
       minWidth={200}
       minHeight={150}
       bounds="parent"
       dragHandleClassName="panel__titlebar"
+      disableDragging={keepAliveSlot ? keepAliveHidden : false}
+      enableResizing={keepAliveSlot ? !keepAliveHidden : undefined}
       onMouseDown={onMouseDown}
       onDrag={(_e, d) => {
         const result = snapPosition(
@@ -151,39 +214,7 @@ export function ComponentPanel({ panel, workspace, canvasSize, onShowGuides, onC
         rndRef.current?.updatePosition({ x: result.x, y: result.y })
       }}
     >
-      <div className="panel" onMouseDown={onMouseDown}>
-        <div className="panel__titlebar">
-          <span className="panel__title">
-            {panel.type === 'extension-view' && panel.componentState?.title
-              ? panel.componentState.title
-              : PANEL_TITLES[panel.type]}
-          </span>
-          {panel.type === 't3-code' && (
-            <button
-              className="panel__close"
-              style={{ fontSize: '14px' }}
-              onClick={(e) => {
-                e.stopPropagation()
-                window.dispatchEvent(new CustomEvent('reload-t3-panel', { detail: { id: panel.id } }))
-              }}
-              title="Reload T3 Code"
-            >
-              ↻
-            </button>
-          )}
-          <button
-            className="panel__close"
-            onClick={(e) => {
-              e.stopPropagation()
-              removePanel(panel.id)
-            }}
-            title="Close panel"
-          >
-            ×
-          </button>
-        </div>
-        <div className="panel__content">{renderContent()}</div>
-      </div>
+      {innerPanel}
     </Rnd>
   )
 }

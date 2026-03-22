@@ -7,7 +7,6 @@ interface Props {
 }
 
 export function T3CodePanel({ panel, workspace }: Props) {
-  // Ignore saved urls for t3 code so it starts fresh every time and uses the correct new port
   const [url, setUrl] = useState<string | null>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [isStarting, setIsStarting] = useState(true) // assume starting until we verify
@@ -29,8 +28,7 @@ export function T3CodePanel({ panel, workspace }: Props) {
         })
         
         if (!isMounted) {
-          // Immediately kill if unmounted during await
-          window.electronAPI.pty.write(ptyId, '\x03')
+          window.electronAPI.pty.dispose(ptyId)
           return () => {}
         }
         
@@ -69,11 +67,9 @@ export function T3CodePanel({ panel, workspace }: Props) {
           }
         }, 400)
 
-        // return a teardown function
         return () => {
           cleanup()
-          // Issue SIGINT equivalent to terminal to stop server
-          window.electronAPI.pty.write(ptyId, '\x03')
+          window.electronAPI.pty.dispose(ptyId)
         }
       } catch (err) {
         console.error('Failed to start T3 Server PTY', err)
@@ -93,6 +89,7 @@ export function T3CodePanel({ panel, workspace }: Props) {
     if (!url || !containerRef.current || webviewRef.current) return
 
     const wv = document.createElement('webview') as any
+    wv.setAttribute('partition', `persist:t3-${panel.id}`)
     wv.setAttribute('src', url)
     wv.setAttribute('allowpopups', '')
     wv.style.width = '100%'
@@ -111,7 +108,7 @@ export function T3CodePanel({ panel, workspace }: Props) {
       }
       webviewRef.current = null
     }
-  }, [url])
+  }, [url, panel.id])
 
   useEffect(() => {
     const handleReload = (e: any) => {

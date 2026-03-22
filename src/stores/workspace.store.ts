@@ -2,6 +2,9 @@ import { create } from 'zustand'
 
 export type PanelType = 'editor' | 'terminal' | 'file-explorer' | 'git' | 'browser' | 'extension-view' | 't3-code'
 
+/** Kept mounted (hidden) when switching away so PTY/webview sessions survive. */
+export const KEEP_ALIVE_PANEL_TYPES: PanelType[] = ['terminal', 'browser', 't3-code']
+
 export interface PanelState {
   id: string
   type: PanelType

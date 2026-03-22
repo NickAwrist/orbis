@@ -117,6 +117,12 @@ export function TerminalPanel({ panel, workspace }: Props) {
       if (inst.hostEl.parentElement === container) {
         container.removeChild(inst.hostEl)
       }
+      try {
+        inst.terminal.dispose()
+      } catch {
+        /* ignore */
+      }
+      terminalInstances.delete(instanceKey)
     }
   }, [instanceKey])
 
@@ -181,7 +187,19 @@ export function TerminalPanel({ panel, workspace }: Props) {
     }
 
     connectPty()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      const inst = terminalInstances.get(instanceKey)
+      if (!inst) return
+      if (inst.cleanupPtyListener) {
+        inst.cleanupPtyListener()
+        inst.cleanupPtyListener = null
+      }
+      if (inst.ptyId) {
+        window.electronAPI.pty.dispose(inst.ptyId)
+        inst.ptyId = null
+      }
+    }
   }, [instanceKey, workspace.rootPath])
 
   // Refit on container resize (debounced so drags don't spam)

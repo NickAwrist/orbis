@@ -10,6 +10,7 @@ const COMPONENT_OPTIONS: { type: PanelType | 'extensions'; label: string; desc: 
   { type: 'file-explorer', label: 'File Explorer', desc: 'Browse project files' },
   { type: 'git', label: 'Git', desc: 'Stage, commit, and view history' },
   { type: 'browser', label: 'Browser', desc: 'Embedded web browser with profile import' },
+  { type: 't3-code', label: 'T3 Code', desc: 'Graphical view into the T3 coding agent', icon: <img src="/icons/t3_code.png" width="16" height="16" alt="T3 Code" /> },
   { type: 'extensions', label: 'Extensions', desc: 'Browse and install VS Code extensions', icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> },
   { type: 'extension-view', label: 'Extension View', desc: 'Open a view provided by an extension' },
 ]

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type PanelType = 'editor' | 'terminal' | 'file-explorer' | 'git' | 'browser' | 'extension-view'
+export type PanelType = 'editor' | 'terminal' | 'file-explorer' | 'git' | 'browser' | 'extension-view' | 't3-code'
 
 export interface PanelState {
   id: string
@@ -61,6 +61,7 @@ const PANEL_DEFAULTS: Record<PanelType, { width: number; height: number }> = {
   git: { width: 350, height: 500 },
   browser: { width: 900, height: 600 },
   'extension-view': { width: 500, height: 500 },
+  't3-code': { width: 600, height: 750 },
 }
 
 export const useIDEStore = create<IDEStore>()((set, get) => ({

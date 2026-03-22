@@ -11,7 +11,7 @@ export function BrowserPanel({ panel }: Props) {
   const updatePanel = useIDEStore((s) => s.updatePanel)
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const webviewRef = useRef<Electron.WebviewTag | null>(null)
+  const webviewRef = useRef<any>(null)
   const urlInputRef = useRef<HTMLInputElement>(null)
   
   const componentStateRef = useRef(panel.componentState)
@@ -40,7 +40,7 @@ export function BrowserPanel({ panel }: Props) {
 
     console.log('[DEBUG] BrowserPanel mount effect running for panel', panel.id, 'partition:', `persist:browser`, 'src:', savedUrl)
 
-    const wv = document.createElement('webview') as Electron.WebviewTag
+    const wv = document.createElement('webview') as any
     wv.setAttribute('partition', 'persist:browser')
     wv.setAttribute('src', savedUrl)
     wv.setAttribute('allowpopups', '')

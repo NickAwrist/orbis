@@ -7,6 +7,7 @@ import { FileExplorerPanel } from '../panels/FileExplorerPanel'
 import { GitPanel } from '../panels/GitPanel'
 import { BrowserPanel } from '../panels/BrowserPanel'
 import { ExtensionViewPanel } from '../panels/ExtensionViewPanel'
+import { T3CodePanel } from '../panels/T3CodePanel'
 import { snapPosition, snapResize, SnapGuide, Rect } from '../utils/snap'
 
 const PANEL_TITLES: Record<string, string> = {
@@ -16,6 +17,7 @@ const PANEL_TITLES: Record<string, string> = {
   git: 'Git',
   browser: 'Browser',
   'extension-view': 'Extension View',
+  't3-code': 'T3 Code',
 }
 
 interface Props {
@@ -65,6 +67,8 @@ export function ComponentPanel({ panel, workspace, canvasSize, onShowGuides, onC
           viewId: panel.componentState?.viewId,
           title: panel.componentState?.title,
         }} />
+      case 't3-code':
+        return <T3CodePanel panel={panel} workspace={workspace} />
       default:
         return <div className="panel__placeholder">Unknown panel type</div>
     }
@@ -154,6 +158,19 @@ export function ComponentPanel({ panel, workspace, canvasSize, onShowGuides, onC
               ? panel.componentState.title
               : PANEL_TITLES[panel.type]}
           </span>
+          {panel.type === 't3-code' && (
+            <button
+              className="panel__close"
+              style={{ fontSize: '14px' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                window.dispatchEvent(new CustomEvent('reload-t3-panel', { detail: { id: panel.id } }))
+              }}
+              title="Reload T3 Code"
+            >
+              ↻
+            </button>
+          )}
           <button
             className="panel__close"
             onClick={(e) => {

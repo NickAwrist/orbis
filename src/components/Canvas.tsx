@@ -110,7 +110,7 @@ export function Canvas() {
           </p>
           <WorkspaceTemplatePicker layoutSize={canvasSize} />
           <div className="canvas__placeholder__add-menu">
-            <AddComponentMenu />
+            <AddComponentMenu subscribeGlobalOpen={false} />
           </div>
         </div>
       )}

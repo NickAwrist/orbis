@@ -30,7 +30,8 @@ export function WorkspaceSwitcher() {
   const setActive = useIDEStore((s) => s.setActiveWorkspace)
   const closeWorkspace = useIDEStore((s) => s.closeWorkspace)
   const deleteWorkspacePermanently = useIDEStore((s) => s.deleteWorkspacePermanently)
-  const [modalOpen, setModalOpen] = useState(false)
+  const modalOpen = useIDEStore((s) => s.isWorkspaceManagerOpen)
+  const setModalOpen = useIDEStore((s) => s.setWorkspaceManagerOpen)
 
   const prevWorkspacesRef = useRef<WorkspaceState[]>([])
   const exitQueueRef = useRef<{ ws: WorkspaceState; insertIndex: number }[]>([])
@@ -73,27 +74,6 @@ export function WorkspaceSwitcher() {
     },
     [deleteWorkspacePermanently],
   )
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && !e.shiftKey && !e.altKey) {
-        const num = parseInt(e.key)
-        if (num >= 1 && num <= 9 && num <= workspaces.length) {
-          e.preventDefault()
-          setActive(workspaces[num - 1].id)
-          return
-        }
-        if (e.key === 'Tab' && workspaces.length > 1) {
-          e.preventDefault()
-          const idx = workspaces.findIndex((w) => w.id === activeId)
-          const next = (idx + 1) % workspaces.length
-          setActive(workspaces[next].id)
-        }
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [workspaces, activeId, setActive])
 
   const rows = mergeTabs(workspaces, leaving)
 

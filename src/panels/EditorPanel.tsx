@@ -125,11 +125,12 @@ export function EditorPanel({ panel, workspace }: Props) {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
+        e.stopPropagation()
         saveFile()
       }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
   }, [saveFile])
 
   const currentTab = tabs[activeTab]

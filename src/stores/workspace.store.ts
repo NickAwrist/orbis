@@ -26,6 +26,7 @@ interface IDEStore {
   maxZIndex: number
   isExtensionsOpen: boolean
   isLogViewerOpen: boolean
+  isWorkspaceManagerOpen: boolean
 
   // Workspace CRUD
   addWorkspace: (name: string, rootPath: string) => void
@@ -37,6 +38,7 @@ interface IDEStore {
   getActiveWorkspace: () => WorkspaceState | undefined
   setExtensionsOpen: (val: boolean) => void
   setLogViewerOpen: (val: boolean) => void
+  setWorkspaceManagerOpen: (val: boolean) => void
 
   // Panel CRUD
   addPanel: (type: PanelType, componentState?: Record<string, any>) => void
@@ -96,6 +98,7 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
   maxZIndex: 1,
   isExtensionsOpen: false,
   isLogViewerOpen: false,
+  isWorkspaceManagerOpen: false,
 
   _nextId: () => {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
@@ -205,6 +208,10 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
 
   setLogViewerOpen: (val: boolean) => {
     set({ isLogViewerOpen: val })
+  },
+
+  setWorkspaceManagerOpen: (val: boolean) => {
+    set({ isWorkspaceManagerOpen: val })
   },
 
   addPanel: (type, componentState) => {

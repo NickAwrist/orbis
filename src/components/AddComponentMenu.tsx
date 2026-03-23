@@ -7,8 +7,11 @@ import {
   type AddPanelMenuEntry,
   type AddPanelSubmenuPick,
 } from './add-panel/addPanelMenuItems'
+import { OPEN_ADD_PANEL_EVENT } from '../lib/global-hotkeys'
 
-export function AddComponentMenu() {
+type Props = { subscribeGlobalOpen?: boolean }
+
+export function AddComponentMenu({ subscribeGlobalOpen = true }: Props) {
   const [open, setOpen] = useState(false)
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null)
   const [submenuRows, setSubmenuRows] = useState<AddPanelSubmenuRow<AddPanelSubmenuPick>[]>([])
@@ -27,6 +30,13 @@ export function AddComponentMenu() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  useEffect(() => {
+    if (!subscribeGlobalOpen) return
+    const openFromHotkey = () => setOpen(true)
+    window.addEventListener(OPEN_ADD_PANEL_EVENT, openFromHotkey)
+    return () => window.removeEventListener(OPEN_ADD_PANEL_EVENT, openFromHotkey)
+  }, [subscribeGlobalOpen])
 
   useEffect(() => {
     if (!open) {

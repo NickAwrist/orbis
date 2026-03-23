@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useIDEStore } from './stores/workspace.store'
 import { Canvas } from './components/Canvas'
 import { TitleBar } from './components/TitleBar'
@@ -6,6 +6,7 @@ import { StatusBar } from './components/StatusBar'
 import { ExtensionsModal } from './components/ExtensionsModal'
 import { LogViewerModal } from './components/LogViewerModal'
 import { initializeDefaultTheme } from './utils/theme-engine'
+import { handleGlobalKeydown } from './lib/global-hotkeys'
 
 export default function App() {
   const loadFromDisk = useIDEStore((s) => s.loadFromDisk)
@@ -20,21 +21,11 @@ export default function App() {
     loadFromDisk()
   }, [loadFromDisk])
 
-  const toggleLogViewer = useCallback(() => {
-    setLogViewerOpen(!useIDEStore.getState().isLogViewerOpen)
-  }, [setLogViewerOpen])
-
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const mod = e.ctrlKey || e.metaKey
-      if (mod && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
-        e.preventDefault()
-        toggleLogViewer()
-      }
-    }
+    const onKey = (e: KeyboardEvent) => handleGlobalKeydown(e)
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [toggleLogViewer])
+  }, [])
 
   // Initialize theme system — applies saved VSX theme or bundled default
   useEffect(() => {

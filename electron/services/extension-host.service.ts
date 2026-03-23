@@ -86,7 +86,7 @@ export class ExtensionHostService {
           env: {
             ...process.env,
             ELECTRON_RUN_AS_NODE: '1',
-            DYNAMIC_IDE_EXT_HOST: '1',
+            ORBIS_EXT_HOST: '1',
           },
           execArgv: [],
         })

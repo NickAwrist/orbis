@@ -651,12 +651,12 @@ export function _registerExtension(id: string, ext: any) {
 // --- Env ---
 
 const env = {
-  appName: 'Dynamic IDE',
+  appName: 'Orbis',
   appRoot: process.cwd(),
   language: 'en',
-  machineId: 'dynamic-ide',
+  machineId: 'orbis',
   sessionId: `session-${Date.now()}`,
-  uriScheme: 'dynamic-ide',
+  uriScheme: 'orbis',
   clipboard: {
     readText: () => Promise.resolve(''),
     writeText: () => Promise.resolve(),

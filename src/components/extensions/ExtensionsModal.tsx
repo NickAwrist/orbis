@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useReducer } from 'react'
 import type { InstalledExtension, ThemeInfo } from '../../types/electron'
 import { useIDEStore } from '../../stores/workspace.store'
-import { applyFullTheme } from '../../utils/theme-engine'
+import { applyFullTheme, getSavedThemeInfo, resetToBuiltinTheme } from '../../utils/theme-engine'
 import type { MarketplaceExtension, HostStatus } from './extensionModalTypes'
 import { ExtensionsModalSidebar } from './ExtensionsModalSidebar'
 import { IconClose } from './ExtensionModalIcons'
@@ -27,6 +27,7 @@ export function ExtensionsModal() {
   const [installing, setInstalling] = useState<string | null>(null)
   const [activating, setActivating] = useState<string | null>(null)
   const [applyingTheme, setApplyingTheme] = useState<string | null>(null)
+  const [, bumpThemeUi] = useReducer((n: number) => n + 1, 0)
   const [hostStatus, setHostStatus] = useState<HostStatus>({
     running: false,
     error: null,
@@ -202,6 +203,14 @@ export function ExtensionsModal() {
       setError(`Theme apply failed: ${msg}`)
     }
     setApplyingTheme(null)
+    bumpThemeUi()
+  }, [])
+
+  const handleResetBuiltinTheme = useCallback(() => {
+    setError(null)
+    resetToBuiltinTheme(undefined)
+    window.dispatchEvent(new CustomEvent('ide-theme-change', { detail: { builtin: true } }))
+    bumpThemeUi()
   }, [])
 
   if (!isExtensionsOpen) return null
@@ -282,7 +291,13 @@ export function ExtensionsModal() {
                 )}
 
                 {tab === 'themes' && (
-                  <ThemesTab themes={themes} applyingTheme={applyingTheme} onApplyTheme={handleApplyTheme} />
+                  <ThemesTab
+                    themes={themes}
+                    applyingTheme={applyingTheme}
+                    extensionThemeActive={!!getSavedThemeInfo()}
+                    onApplyTheme={handleApplyTheme}
+                    onResetBuiltin={handleResetBuiltinTheme}
+                  />
                 )}
               </>
             )}

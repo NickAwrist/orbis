@@ -1,7 +1,7 @@
 import { useIDEStore } from '../stores/workspace.store'
 import type { PanelType } from '../stores/panel-types'
 
-export const OPEN_ADD_PANEL_EVENT = 'dynamic-ide:open-add-panel'
+export const OPEN_ADD_PANEL_EVENT = 'orbis:open-add-panel'
 
 export function dispatchOpenAddPanelMenu() {
   window.dispatchEvent(new CustomEvent(OPEN_ADD_PANEL_EVENT))

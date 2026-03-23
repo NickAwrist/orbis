@@ -1,4 +1,4 @@
-# Dynamic IDE
+# Orbis
 
 A fully customizable IDE with free-form draggable/resizable component panels.
 

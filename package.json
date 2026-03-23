@@ -1,5 +1,5 @@
 {
-  "name": "dynamic-ide",
+  "name": "orbis",
   "version": "0.1.0",
   "description": "A fully customizable IDE with free-form draggable components",
   "main": "dist-electron/main.js",

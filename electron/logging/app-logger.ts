@@ -12,7 +12,7 @@ export interface LogEntry {
   detail?: string
 }
 
-const ROOT = 'dynamic.ide'
+const ROOT = 'orbis'
 const LEVEL_ORDER: Record<LogLevel, number> = {
   debug: 10,
   info: 20,
@@ -44,7 +44,7 @@ let fileInitAttempted = false
 export function isValidScope(scope: string): boolean {
   const parts = scope.split('.')
   if (parts.length < SCOPE_MIN_SEGMENTS || parts.length > SCOPE_MAX_SEGMENTS) return false
-  if (parts[0] !== 'dynamic' || parts[1] !== 'ide') return false
+  if (parts[0] !== 'orbis') return false
   return parts.every((p) => /^[a-z0-9]+$/.test(p))
 }
 
@@ -52,9 +52,9 @@ function normalizeScope(scope: string): string {
   const s = scope.trim().toLowerCase()
   if (!isValidScope(s)) {
     if (process.env.NODE_ENV !== 'production') {
-      console.error(`[app-logger] Invalid scope "${scope}", using dynamic.ide.misc.unknown`)
+      console.error(`[app-logger] Invalid scope "${scope}", using orbis.misc.unknown`)
     }
-    return 'dynamic.ide.misc.unknown'
+    return 'orbis.misc.unknown'
   }
   return s
 }
@@ -202,7 +202,7 @@ function createScoped(scope: string): ScopedLogger {
   }
 }
 
-/** Prefix `dynamic.ide` + suffix, e.g. child('main.extension.host') */
+/** Prefix `orbis` + suffix, e.g. child('main.extension.host') */
 export const loggerRoot = {
   child: (suffix: string): ScopedLogger => createScoped(joinChild(ROOT, suffix)),
 }

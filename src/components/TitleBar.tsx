@@ -23,7 +23,7 @@ export function TitleBar({ showAddComponentMenu }: Props) {
     <div className="titlebar">
       <div className="titlebar__drag-region" />
       <div className="titlebar__left">
-        <span className="titlebar__brand">Dynamic IDE</span>
+        <span className="titlebar__brand">Orbis</span>
       </div>
       <div className="titlebar__center">
         <WorkspaceSwitcher />

@@ -172,8 +172,36 @@ const MANAGED_CSS_VAR_NAMES: string[] = [
   ...new Set<string>([...Object.values(CSS_VAR_MAP), ...DERIVED_CSS_VAR_KEYS]),
 ]
 
-const THEME_CSS_CACHE_KEY = 'dynamic-ide-theme-css-cache'
+export const THEME_STORAGE_KEY = 'orbis-theme'
+const LEGACY_THEME_STORAGE_KEY = 'dynamic-ide-theme'
+
+const THEME_CSS_CACHE_KEY = 'orbis-theme-css-cache'
+const LEGACY_THEME_CSS_CACHE_KEY = 'dynamic-ide-theme-css-cache'
 const THEME_CSS_CACHE_VERSION = 1
+
+function migrateLegacyThemeStorage(): void {
+  try {
+    const legacy = localStorage.getItem(LEGACY_THEME_STORAGE_KEY)
+    if (legacy && !localStorage.getItem(THEME_STORAGE_KEY)) {
+      localStorage.setItem(THEME_STORAGE_KEY, legacy)
+      localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function migrateLegacyThemeCssCache(): void {
+  try {
+    const legacy = localStorage.getItem(LEGACY_THEME_CSS_CACHE_KEY)
+    if (legacy && !localStorage.getItem(THEME_CSS_CACHE_KEY)) {
+      localStorage.setItem(THEME_CSS_CACHE_KEY, legacy)
+      localStorage.removeItem(LEGACY_THEME_CSS_CACHE_KEY)
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 export interface ThemeCssCachePayload {
   v: number
@@ -190,6 +218,7 @@ function clearManagedThemeCssVars(root: HTMLElement): void {
 /** Restore last session theme variables before first paint. Returns true if cache was applied. */
 export function hydrateThemeFromCache(): boolean {
   try {
+    migrateLegacyThemeCssCache()
     const raw = localStorage.getItem(THEME_CSS_CACHE_KEY)
     if (!raw) return false
     const parsed = JSON.parse(raw) as Partial<ThemeCssCachePayload>
@@ -666,7 +695,7 @@ export function applyFullTheme(
       const monacoTheme = convertToMonacoTheme(themeData, uiTheme, colors)
       const baseName = themeInfo
         ? `ext-theme-${themeInfo.extensionId}-${themeInfo.label}`.replace(/[^a-zA-Z0-9-]/g, '-')
-        : 'dynamic-ide-default'
+        : 'orbis-default'
       const themeId = `${baseName}-v${themeVersion}`
       monacoInstance.editor.defineTheme(themeId, monacoTheme)
       monacoInstance.editor.setTheme(themeId)
@@ -678,7 +707,7 @@ export function applyFullTheme(
 
   // 6. Persist extension theme selection
   if (themeInfo) {
-    localStorage.setItem('dynamic-ide-theme', JSON.stringify({
+    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify({
       extensionId: themeInfo.extensionId,
       label: themeInfo.label,
       uiTheme: themeInfo.uiTheme,
@@ -688,6 +717,19 @@ export function applyFullTheme(
 
   persistThemeCache(root, themeType)
   syncWindowChromeFromEditorBackground(colors['editor.background'] || '#1e1e2e')
+}
+
+/** Clear any persisted extension theme and apply the bundled default. */
+export function resetToBuiltinTheme(
+  monaco?: typeof import('monaco-editor'),
+): void {
+  try {
+    localStorage.removeItem(THEME_STORAGE_KEY)
+    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
+  } catch {
+    /* ignore */
+  }
+  applyFullTheme(defaultTheme, 'vs-dark', monaco)
 }
 
 // ─── Theme Initialization ────────────────────────────────────────────────────
@@ -705,7 +747,8 @@ export async function initializeDefaultTheme(
         return
       }
     } catch {
-      localStorage.removeItem('dynamic-ide-theme')
+      localStorage.removeItem(THEME_STORAGE_KEY)
+      localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
     }
   }
 
@@ -714,7 +757,8 @@ export async function initializeDefaultTheme(
 
 export function getSavedThemeInfo(): ThemeInfo | null {
   try {
-    const raw = localStorage.getItem('dynamic-ide-theme')
+    migrateLegacyThemeStorage()
+    const raw = localStorage.getItem(THEME_STORAGE_KEY)
     if (raw) return JSON.parse(raw)
   } catch {}
   return null

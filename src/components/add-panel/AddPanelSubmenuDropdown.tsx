@@ -4,7 +4,7 @@ export type AddPanelSubmenuRow<T = unknown> = {
   key: string
   label: string
   desc?: string
-  icon?: ReactNode
+  icon: ReactNode
   data: T
 }
 
@@ -60,7 +60,7 @@ export function AddPanelSubmenuDropdown<T>({
             onClick={() => onSelect(row)}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {row.icon && <span style={{ display: 'flex', color: 'var(--accent, #89b4fa)' }}>{row.icon}</span>}
+              <span style={{ display: 'flex', color: 'var(--accent, #89b4fa)' }}>{row.icon}</span>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <span className="add-menu__item-label">{row.label}</span>
                 {row.desc && <span className="add-menu__item-desc">{row.desc}</span>}

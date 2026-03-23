@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useIDEStore } from '../stores/workspace.store'
 import { AddPanelSubmenuDropdown, type AddPanelSubmenuRow } from './add-panel/AddPanelSubmenuDropdown'
+import { Codicon } from './codicon/Codicon'
 import {
   ADD_PANEL_MENU_ENTRIES,
   type AddPanelMenuEntry,
@@ -16,7 +17,6 @@ export function AddComponentMenu() {
   const submenuLoadGen = useRef(0)
   const addPanel = useIDEStore((s) => s.addPanel)
   const activeWs = useIDEStore((s) => s.activeWorkspaceId)
-  const setExtensionsOpen = useIDEStore((s) => s.setExtensionsOpen)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -93,11 +93,6 @@ export function AddComponentMenu() {
 
   const handleRootClick = useCallback(
     (entry: AddPanelMenuEntry) => {
-      if (entry.kind === 'action' && entry.actionId === 'open-extensions') {
-        setExtensionsOpen(true)
-        closeMenu()
-        return
-      }
       if (entry.kind === 'submenu') {
         void openSubmenu(entry)
         return
@@ -107,7 +102,7 @@ export function AddComponentMenu() {
         closeMenu()
       }
     },
-    [addPanel, closeMenu, openSubmenu, setExtensionsOpen],
+    [addPanel, closeMenu, openSubmenu],
   )
 
   const activeSubmenuEntry =
@@ -130,8 +125,15 @@ export function AddComponentMenu() {
           closeMenu()
         }}
       >
-        <span className="add-menu__item-label">Open Empty (pick later)</span>
-        <span className="add-menu__item-desc">Choose the contribution after the panel opens</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ display: 'flex', color: 'var(--accent, #89b4fa)' }}>
+            <Codicon name="extensions" />
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span className="add-menu__item-label">Open Empty (pick later)</span>
+            <span className="add-menu__item-desc">Choose the contribution after the panel opens</span>
+          </div>
+        </div>
       </button>
     ) : null
 
@@ -158,9 +160,7 @@ export function AddComponentMenu() {
               onClick={() => handleRootClick(entry)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {'icon' in entry && entry.icon && (
-                  <span style={{ display: 'flex', color: 'var(--accent, #89b4fa)' }}>{entry.icon}</span>
-                )}
+                <span style={{ display: 'flex', color: 'var(--accent, #89b4fa)' }}>{entry.icon}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <span className="add-menu__item-label">{entry.label}</span>
                   <span className="add-menu__item-desc">{entry.desc}</span>

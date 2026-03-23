@@ -115,6 +115,14 @@ function readThemeChromeBackground(): string {
   return '#1e1e2e'
 }
 
+function resolveAppIconPath(): string | undefined {
+  const fromPublic = path.join(__dirname, '../public/orbis-icon.png')
+  const fromDist = path.join(__dirname, '../dist/orbis-icon.png')
+  if (fs.existsSync(fromPublic)) return fromPublic
+  if (fs.existsSync(fromDist)) return fromDist
+  return undefined
+}
+
 function createWindow() {
   const saved = readPersistedWindowState()
   const useSaved = !!(saved && windowStateIntersectsDisplay(saved))
@@ -128,6 +136,8 @@ function createWindow() {
         isMaximized: false,
       }
 
+  const appIcon = resolveAppIconPath()
+
   mainWindow = new BrowserWindow({
     x: rect.x,
     y: rect.y,
@@ -138,6 +148,7 @@ function createWindow() {
     frame: false,
     titleBarStyle: 'hidden',
     backgroundColor: readThemeChromeBackground(),
+    ...(appIcon ? { icon: appIcon } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,

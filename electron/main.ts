@@ -437,14 +437,14 @@ function registerIpcHandlers() {
     return extensionHostService.executeCommand(command, ...args)
   })
   ipcMain.handle('exthost:status', () => extensionHostService.getStatus())
-  ipcMain.handle('exthost:getViews', async () => {
-    rpcLog.debug('get_views', `host_running=${extensionHostService.isRunning}`)
+  ipcMain.handle('exthost:getExtensionPanels', async () => {
+    rpcLog.debug('get_extension_panels', `host_running=${extensionHostService.isRunning}`)
     try {
-      const views = await extensionHostService.getRegisteredViews()
-      rpcLog.info('views', views.map((v) => v.viewId).join(', ') || '(none)')
-      return views
+      const panels = await extensionHostService.getRegisteredExtensionPanels()
+      rpcLog.info('extension_panels', panels.map((v) => v.viewId).join(', ') || '(none)')
+      return panels
     } catch (err: any) {
-      rpcLog.error('get_views_failed', err.message)
+      rpcLog.error('get_extension_panels_failed', err.message)
       throw err
     }
   })

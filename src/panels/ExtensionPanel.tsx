@@ -9,32 +9,32 @@ interface Props {
   }
 }
 
-export function ExtensionViewPanel({ panel }: Props) {
+export function ExtensionPanel({ panel }: Props) {
   const [html, setHtml] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [availableViews, setAvailableViews] = useState<Array<{ viewId: string; type: string }>>([])
-  const [selectedViewId, setSelectedViewId] = useState<string | null>(panel.viewId || null)
+  const [registered, setRegistered] = useState<Array<{ viewId: string; type: string }>>([])
+  const [selectedId, setSelectedId] = useState<string | null>(panel.viewId || null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
-    if (selectedViewId) return
+    if (selectedId) return
     let cancelled = false
     const load = async () => {
       try {
-        const views = await window.electronAPI.extensions.getRegisteredViews()
-        if (!cancelled) setAvailableViews(views)
-      } catch (err: any) {
-        // silently ignore — views not available yet
+        const items = await window.electronAPI.extensions.getRegisteredExtensionPanels()
+        if (!cancelled) setRegistered(items)
+      } catch {
+        // silently ignore — extension host not ready
       }
       if (!cancelled) setLoading(false)
     }
     load()
     return () => { cancelled = true }
-  }, [selectedViewId])
+  }, [selectedId])
 
-  const resolveView = useCallback(async (viewId: string) => {
-    setSelectedViewId(viewId)
+  const resolveAndLoad = useCallback(async (viewId: string) => {
+    setSelectedId(viewId)
     setLoading(true)
     setError(null)
     try {
@@ -42,75 +42,70 @@ export function ExtensionViewPanel({ panel }: Props) {
       if (result?.html) {
         setHtml(wrapHtml(result.html, viewId))
       } else {
-        setError('Extension did not provide any HTML content for this view.')
+        setError('Extension did not provide any HTML content for this panel.')
       }
     } catch (err: any) {
-      setError(`Failed to resolve view: ${err.message}`)
+      setError(`Failed to load extension panel: ${err.message}`)
     }
     setLoading(false)
   }, [])
 
-  // Auto-resolve if viewId is preset
   useEffect(() => {
     if (panel.viewId) {
-      resolveView(panel.viewId)
+      resolveAndLoad(panel.viewId)
     }
-  }, [panel.viewId, resolveView])
+  }, [panel.viewId, resolveAndLoad])
 
-  // Listen for HTML updates from the extension host (live updates)
   useEffect(() => {
-    if (!selectedViewId) return
+    if (!selectedId) return
     const unsub = window.electronAPI.extensions.onWebviewHtml((data) => {
-      if (data.viewId === selectedViewId) {
-        setHtml(wrapHtml(data.html, selectedViewId))
+      if (data.viewId === selectedId) {
+        setHtml(wrapHtml(data.html, selectedId))
       }
     })
     return unsub
-  }, [selectedViewId])
+  }, [selectedId])
 
-  // Listen for postMessage from extension → webview
   useEffect(() => {
-    if (!selectedViewId) return
+    if (!selectedId) return
     const unsub = window.electronAPI.extensions.onWebviewMessage((data) => {
-      if (data.viewId === selectedViewId && iframeRef.current?.contentWindow) {
+      if (data.viewId === selectedId && iframeRef.current?.contentWindow) {
         iframeRef.current.contentWindow.postMessage(data.message, '*')
       }
     })
     return unsub
-  }, [selectedViewId])
+  }, [selectedId])
 
-  // Listen for postMessage from webview iframe → extension
   useEffect(() => {
-    if (!selectedViewId) return
+    if (!selectedId) return
     const handler = (event: MessageEvent) => {
       if (event.source === iframeRef.current?.contentWindow) {
-        window.electronAPI.extensions.sendWebviewMessage(selectedViewId, event.data)
+        window.electronAPI.extensions.sendWebviewMessage(selectedId, event.data)
       }
     }
     globalThis.addEventListener('message', handler)
     return () => globalThis.removeEventListener('message', handler)
-  }, [selectedViewId])
+  }, [selectedId])
 
-  // View picker when no viewId is set
-  if (!selectedViewId) {
+  if (!selectedId) {
     return (
-      <div className="ext-view-panel">
-        <div className="ext-view-panel__picker">
-          <h3>Select an extension view</h3>
-          {loading && <div className="ext-view-panel__loading">Loading views...</div>}
-          {!loading && availableViews.length === 0 && (
-            <div className="ext-view-panel__empty">
-              No extension views registered. Start the extension host and activate an extension first.
+      <div className="ext-panel">
+        <div className="ext-panel__picker">
+          <h3>Select an extension contribution</h3>
+          {loading && <div className="ext-panel__loading">Loading…</div>}
+          {!loading && registered.length === 0 && (
+            <div className="ext-panel__empty">
+              No extension panels registered. Start the extension host and activate an extension first.
             </div>
           )}
-          {availableViews.map((v) => (
+          {registered.map((v) => (
             <button
               key={v.viewId}
-              className="ext-view-panel__view-btn"
-              onClick={() => resolveView(v.viewId)}
+              className="ext-panel__choice-btn"
+              onClick={() => resolveAndLoad(v.viewId)}
             >
-              <span className="ext-view-panel__view-id">{v.viewId}</span>
-              <span className="ext-view-panel__view-type">{v.type}</span>
+              <span className="ext-panel__choice-id">{v.viewId}</span>
+              <span className="ext-panel__choice-type">{v.type}</span>
             </button>
           ))}
         </div>
@@ -119,12 +114,12 @@ export function ExtensionViewPanel({ panel }: Props) {
   }
 
   return (
-    <div className="ext-view-panel">
-      {loading && <div className="ext-view-panel__loading">Loading extension view...</div>}
+    <div className="ext-panel">
+      {loading && <div className="ext-panel__loading">Loading extension panel…</div>}
       {error && (
-        <div className="ext-view-panel__error">
+        <div className="ext-panel__error">
           <p>{error}</p>
-          <button className="ext-view-panel__retry" onClick={() => resolveView(selectedViewId)}>
+          <button className="ext-panel__retry" onClick={() => resolveAndLoad(selectedId)}>
             Retry
           </button>
         </div>
@@ -132,10 +127,10 @@ export function ExtensionViewPanel({ panel }: Props) {
       {html && (
         <iframe
           ref={iframeRef}
-          className="ext-view-panel__iframe"
+          className="ext-panel__iframe"
           srcDoc={html}
           sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
-          title={panel.title || selectedViewId}
+          title={panel.title || selectedId}
         />
       )}
     </div>
@@ -151,7 +146,6 @@ function wrapHtml(html: string, viewId: string): string {
   if (html.includes('<html') || html.includes('<!DOCTYPE')) {
     const nonce = extractNonce(html)
     const bridge = getMessagingBridge(viewId, nonce)
-    // Inject bridge in <head> BEFORE extension scripts so acquireVsCodeApi is defined early
     const injected = html.replace(/<head([^>]*)>/i, `<head$1>${bridge}`)
     return injected
   }

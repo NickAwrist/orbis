@@ -86,7 +86,7 @@ const PANEL_DEFAULTS: Record<PanelType, { width: number; height: number }> = {
   'file-explorer': { width: 300, height: 500 },
   git: { width: 350, height: 500 },
   browser: { width: 900, height: 600 },
-  'extension-view': { width: 500, height: 500 },
+  'extension-panel': { width: 500, height: 500 },
   't3-code': { width: 600, height: 750 },
 }
 

@@ -9,7 +9,7 @@ interface Props {
   onActivate: (ext: InstalledExtension) => void
   onToggle: (extId: string, enabled: boolean) => void
   onUninstall: (extId: string) => void
-  onOpenExtensionView: () => void
+  onOpenExtensionPanel: () => void
 }
 
 export function InstalledExtensionRow({
@@ -19,7 +19,7 @@ export function InstalledExtensionRow({
   onActivate,
   onToggle,
   onUninstall,
-  onOpenExtensionView,
+  onOpenExtensionPanel,
 }: Props) {
   const hasRunnable = !!(ext.manifest.main || ext.manifest.browser)
 
@@ -54,8 +54,8 @@ export function InstalledExtensionRow({
               <button
                 type="button"
                 className="ext-modal__icon-btn"
-                onClick={onOpenExtensionView}
-                title="Open View"
+                onClick={onOpenExtensionPanel}
+                title="Open Panel"
               >
                 <IconPanel />
               </button>

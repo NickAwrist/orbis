@@ -20,7 +20,7 @@ function themeIsActive(theme: ThemeInfo): boolean {
 
 export function ThemesTab({ themes, applyingTheme, onApplyTheme }: Props) {
   return (
-    <div className="ext-modal__view">
+    <div className="ext-modal__pane">
       <div className="ext-modal__list ext-modal__grid">
         {themes.length === 0 && (
           <div className="ext-modal__empty">

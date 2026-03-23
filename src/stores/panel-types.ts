@@ -4,7 +4,7 @@ export type PanelType =
   | 'file-explorer'
   | 'git'
   | 'browser'
-  | 'extension-view'
+  | 'extension-panel'
   | 't3-code'
 
 export interface PanelState {

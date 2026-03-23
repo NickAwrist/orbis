@@ -206,7 +206,7 @@ export function ExtensionsModal() {
 
   if (!isExtensionsOpen) return null
 
-  const viewTitle =
+  const mainHeaderTitle =
     tab === 'marketplace'
       ? 'Extension Marketplace'
       : tab === 'installed'
@@ -231,7 +231,7 @@ export function ExtensionsModal() {
 
         <div className="ext-modal__main">
           <div className="ext-modal__main-header">
-            <h2 className="ext-modal__view-title">{viewTitle}</h2>
+            <h2 className="ext-modal__pane-title">{mainHeaderTitle}</h2>
             <button type="button" className="ext-modal__close-btn" onClick={() => setExtensionsOpen(false)}>
               <IconClose />
             </button>
@@ -272,8 +272,8 @@ export function ExtensionsModal() {
                     onActivate={handleActivate}
                     onToggle={handleToggle}
                     onUninstall={handleUninstall}
-                    onOpenExtensionView={(ext) => {
-                      addPanel('extension-view', {
+                    onOpenExtensionPanel={(ext) => {
+                      addPanel('extension-panel', {
                         title: ext.manifest.displayName || ext.manifest.name,
                       })
                       setExtensionsOpen(false)

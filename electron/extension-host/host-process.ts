@@ -29,7 +29,7 @@ import {
   _registerExtension,
   _executeCommand,
   _getRegisteredCommands,
-  _getRegisteredViews,
+  _getRegisteredExtensionPanels,
   _resolveWebviewView,
   _handleWebviewMessage,
 } from './vscode-shim'
@@ -278,8 +278,8 @@ process.on('message', async (msg: any) => {
         result = _getRegisteredCommands()
         break
 
-      case 'getRegisteredViews':
-        result = _getRegisteredViews()
+      case 'getRegisteredExtensionPanels':
+        result = _getRegisteredExtensionPanels()
         break
 
       case 'resolveWebviewView':

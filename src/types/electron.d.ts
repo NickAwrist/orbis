@@ -167,7 +167,7 @@ export interface ElectronAPI {
     activateExtension: (extensionId: string) => Promise<void>
     executeCommand: (command: string, ...args: any[]) => Promise<any>
     getHostStatus: () => Promise<{ running: boolean; error: string | null; stderr: string[] }>
-    getRegisteredViews: () => Promise<Array<{ viewId: string; type: string }>>
+    getRegisteredExtensionPanels: () => Promise<Array<{ viewId: string; type: string }>>
     resolveWebviewView: (viewId: string) => Promise<{ html: string } | null>
     sendWebviewMessage: (viewId: string, message: any) => Promise<void>
     onStatusBarUpdate: (callback: (item: any) => void) => () => void

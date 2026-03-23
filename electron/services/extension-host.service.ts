@@ -192,8 +192,8 @@ export class ExtensionHostService {
     return this.sendRequest('getRegisteredCommands', {})
   }
 
-  async getRegisteredViews(): Promise<Array<{ viewId: string; type: string }>> {
-    return this.sendRequest('getRegisteredViews', {})
+  async getRegisteredExtensionPanels(): Promise<Array<{ viewId: string; type: string }>> {
+    return this.sendRequest('getRegisteredExtensionPanels', {})
   }
 
   async resolveWebviewView(viewId: string): Promise<{ html: string } | null> {

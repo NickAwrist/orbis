@@ -124,7 +124,8 @@ const api = {
       error: string | null
       stderr: string[]
     }>,
-    getRegisteredViews: () => ipcRenderer.invoke('exthost:getViews') as Promise<Array<{ viewId: string; type: string }>>,
+    getRegisteredExtensionPanels: () =>
+      ipcRenderer.invoke('exthost:getExtensionPanels') as Promise<Array<{ viewId: string; type: string }>>,
     resolveWebviewView: (viewId: string) => ipcRenderer.invoke('exthost:resolveView', viewId) as Promise<{ html: string } | null>,
     sendWebviewMessage: (viewId: string, message: any) =>
       ipcRenderer.invoke('exthost:webviewMessage', { viewId, message }),

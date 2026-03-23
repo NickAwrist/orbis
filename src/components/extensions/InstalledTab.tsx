@@ -7,7 +7,7 @@ interface Props {
   onActivate: (ext: InstalledExtension) => void
   onToggle: (extId: string, enabled: boolean) => void
   onUninstall: (extId: string) => void
-  onOpenExtensionView: (ext: InstalledExtension) => void
+  onOpenExtensionPanel: (ext: InstalledExtension) => void
 }
 
 function installedIconUrl(ext: InstalledExtension): string | null {
@@ -22,10 +22,10 @@ export function InstalledTab({
   onActivate,
   onToggle,
   onUninstall,
-  onOpenExtensionView,
+  onOpenExtensionPanel,
 }: Props) {
   return (
-    <div className="ext-modal__view">
+    <div className="ext-modal__pane">
       <div className="ext-modal__list">
         {installed.length === 0 && (
           <div className="ext-modal__empty">No extensions installed</div>
@@ -39,7 +39,7 @@ export function InstalledTab({
             onActivate={onActivate}
             onToggle={onToggle}
             onUninstall={onUninstall}
-            onOpenExtensionView={() => onOpenExtensionView(ext)}
+            onOpenExtensionPanel={() => onOpenExtensionPanel(ext)}
           />
         ))}
       </div>

@@ -6,7 +6,7 @@ import { TerminalPanel } from '../panels/TerminalPanel'
 import { FileExplorerPanel } from '../panels/FileExplorerPanel'
 import { GitPanel } from '../panels/GitPanel'
 import { BrowserPanel } from '../panels/BrowserPanel'
-import { ExtensionViewPanel } from '../panels/ExtensionViewPanel'
+import { ExtensionPanel } from '../panels/ExtensionPanel'
 import { T3CodePanel } from '../panels/T3CodePanel'
 import { snapPosition, snapResize, SnapGuide, Rect } from '../utils/snap'
 
@@ -16,7 +16,7 @@ const PANEL_TITLES: Record<string, string> = {
   'file-explorer': 'File Explorer',
   git: 'Git',
   browser: 'Browser',
-  'extension-view': 'Extension View',
+  'extension-panel': 'Extension Panel',
   't3-code': 'T3 Code',
 }
 
@@ -74,8 +74,8 @@ export function ComponentPanel({
         return <GitPanel panel={panel} workspace={workspace} />
       case 'browser':
         return <BrowserPanel panel={panel} workspace={workspace} />
-      case 'extension-view':
-        return <ExtensionViewPanel panel={{
+      case 'extension-panel':
+        return <ExtensionPanel panel={{
           id: panel.id,
           type: panel.type,
           viewId: panel.componentState?.viewId,
@@ -92,7 +92,7 @@ export function ComponentPanel({
     <div className="panel" onMouseDown={isHiddenKeepAlive ? undefined : onMouseDown}>
       <div className="panel__titlebar">
         <span className="panel__title">
-          {panel.type === 'extension-view' && panel.componentState?.title
+          {panel.type === 'extension-panel' && panel.componentState?.title
             ? panel.componentState.title
             : PANEL_TITLES[panel.type]}
         </span>

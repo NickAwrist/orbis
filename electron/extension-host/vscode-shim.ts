@@ -316,12 +316,12 @@ class WebviewImpl {
 const webviewViewProviders = new Map<string, any>()
 const liveWebviews = new Map<string, WebviewImpl>()
 
-export function _getRegisteredViews(): Array<{ viewId: string; type: 'webviewView' | 'treeData' | 'webviewPanel' }> {
-  const views: Array<{ viewId: string; type: 'webviewView' | 'treeData' | 'webviewPanel' }> = []
+export function _getRegisteredExtensionPanels(): Array<{ viewId: string; type: 'webviewView' | 'treeData' | 'webviewPanel' }> {
+  const entries: Array<{ viewId: string; type: 'webviewView' | 'treeData' | 'webviewPanel' }> = []
   for (const viewId of webviewViewProviders.keys()) {
-    views.push({ viewId, type: 'webviewView' })
+    entries.push({ viewId, type: 'webviewView' })
   }
-  return views
+  return entries
 }
 
 export async function _resolveWebviewView(viewId: string): Promise<{ html: string } | null> {

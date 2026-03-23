@@ -25,7 +25,7 @@ export function MarketplaceTab({
   onInstall,
 }: Props) {
   return (
-    <div className="ext-modal__view">
+    <div className="ext-modal__pane">
       <div className="ext-modal__search">
         <IconSearch className="ext-modal__search-icon" />
         <input

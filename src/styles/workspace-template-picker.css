@@ -1,0 +1,189 @@
+.workspace-template-picker {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 720px;
+  width: 100%;
+}
+
+.workspace-template-picker__label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.workspace-template-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .workspace-template-picker__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.workspace-template-picker__card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--text-muted) 35%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-primary) 92%, var(--accent, #89b4fa) 8%);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.workspace-template-picker__card:hover {
+  border-color: color-mix(in srgb, var(--accent, #89b4fa) 55%, transparent);
+  background: color-mix(in srgb, var(--bg-primary) 85%, var(--accent, #89b4fa) 15%);
+}
+
+.workspace-template-picker__card-title {
+  align-self: flex-start;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.workspace-template-picker__card-desc {
+  align-self: flex-start;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.canvas__placeholder--empty-ws {
+  max-width: 760px;
+  padding: 0 16px 24px;
+}
+
+.canvas__placeholder__add-menu {
+  margin-top: 20px;
+}
+
+/* ----- Mini layout previews (wireframe) ----- */
+.workspace-template-mini-preview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  box-sizing: border-box;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px;
+  background: color-mix(in srgb, var(--text-muted) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+}
+
+.workspace-template-mini-preview__cell {
+  background: color-mix(in srgb, var(--accent, #89b4fa) 32%, var(--bg-primary));
+  border-radius: 2px;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__cell--grow {
+  /* In row flex parents, empty flex children need min-width: 0 or they stay at 0px wide */
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.workspace-template-mini-preview__cell--git {
+  flex-shrink: 0;
+  width: 14%;
+  align-self: stretch;
+}
+
+.workspace-template-mini-preview__cell--tall {
+  flex: 2.4;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__ide,
+.workspace-template-mini-preview__hybrid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__ide-top,
+.workspace-template-mini-preview__hybrid-top {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__ide-left,
+.workspace-template-mini-preview__hybrid-left {
+  width: 26%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.workspace-template-mini-preview__ide-left .workspace-template-mini-preview__cell,
+.workspace-template-mini-preview__hybrid-left .workspace-template-mini-preview__cell {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__hybrid-right {
+  width: 28%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__vibe {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__vibe-main {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  min-height: 0;
+}
+
+.workspace-template-mini-preview__term {
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent, #89b4fa) 48%, var(--bg-primary));
+}
+
+.workspace-template-mini-preview__term--thin {
+  height: 17%;
+  min-height: 6px;
+}
+
+.workspace-template-mini-preview__term--thick {
+  height: 24%;
+  min-height: 8px;
+}

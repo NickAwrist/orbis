@@ -1,23 +1,17 @@
 import { create } from 'zustand'
 import { createUiLogger, Scopes } from '../lib/logger'
+import {
+  buildWorkspaceTemplatePanels,
+  type WorkspaceTemplateId,
+} from '../lib/workspace-templates'
+import type { PanelState, PanelType } from './panel-types'
+
+export type { PanelState, PanelType } from './panel-types'
 
 const log = createUiLogger(Scopes.uiStoreWorkspace)
 
-export type PanelType = 'editor' | 'terminal' | 'file-explorer' | 'git' | 'browser' | 'extension-view' | 't3-code'
-
 /** Kept mounted (hidden) when switching away so PTY/webview sessions survive. */
 export const KEEP_ALIVE_PANEL_TYPES: PanelType[] = ['terminal', 'browser', 't3-code']
-
-export interface PanelState {
-  id: string
-  type: PanelType
-  x: number
-  y: number
-  width: number
-  height: number
-  zIndex: number
-  componentState: Record<string, any>
-}
 
 export interface WorkspaceState {
   id: string
@@ -46,6 +40,10 @@ interface IDEStore {
 
   // Panel CRUD
   addPanel: (type: PanelType, componentState?: Record<string, any>) => void
+  applyWorkspaceTemplate: (
+    templateId: WorkspaceTemplateId,
+    layoutSize: { width: number; height: number },
+  ) => void
   removePanel: (panelId: string) => void
   updatePanel: (panelId: string, updates: Partial<PanelState>) => void
   bringToFront: (panelId: string) => void
@@ -232,6 +230,30 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
       maxZIndex: newZ,
       workspaces: s.workspaces.map((w) =>
         w.id === ws.id ? { ...w, panels: [...w.panels, panel] } : w,
+      ),
+    }))
+    debouncedSave(get())
+  },
+
+  applyWorkspaceTemplate: (templateId, layoutSize) => {
+    const ws = get().getActiveWorkspace()
+    if (!ws || ws.panels.length > 0) return
+
+    const cw = Math.floor(layoutSize.width) > 0 ? Math.floor(layoutSize.width) : 1280
+    const ch = Math.floor(layoutSize.height) > 0 ? Math.floor(layoutSize.height) : 800
+    const panels = buildWorkspaceTemplatePanels(
+      templateId,
+      cw,
+      ch,
+      get()._nextId,
+      get().maxZIndex,
+    )
+    const newMaxZ = panels.reduce((m, p) => Math.max(m, p.zIndex), get().maxZIndex)
+
+    set((s) => ({
+      maxZIndex: newMaxZ,
+      workspaces: s.workspaces.map((w) =>
+        w.id === ws.id ? { ...w, panels } : w,
       ),
     }))
     debouncedSave(get())

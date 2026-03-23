@@ -7,6 +7,7 @@ import {
 } from '../stores/workspace.store'
 import { ComponentPanel } from './ComponentPanel'
 import { AddComponentMenu } from './AddComponentMenu'
+import { WorkspaceTemplatePicker } from './workspace-templates/WorkspaceTemplatePicker'
 import { SnapGuide } from '../utils/snap'
 
 export function Canvas() {
@@ -62,7 +63,10 @@ export function Canvas() {
   const hasPanels = activeWs.panels.length > 0
 
   return (
-    <div className="canvas" ref={canvasRef}>
+    <div
+      className={!hasPanels ? 'canvas canvas--empty-workspace' : 'canvas'}
+      ref={canvasRef}
+    >
       {keepAlivePanels.map(({ workspace, panel }) => (
         <ComponentPanel
           key={panel.id}
@@ -99,12 +103,13 @@ export function Canvas() {
         />
       ))}
       {!hasPanels && (
-        <div className="canvas__placeholder">
+        <div className="canvas__placeholder canvas__placeholder--empty-ws">
           <p className="canvas__placeholder-text">Workspace is empty</p>
           <p className="canvas__placeholder-hint">
-            Click the + button to add components
+            Pick a layout or add panels with the + button in the title bar
           </p>
-          <div style={{ marginTop: 16 }}>
+          <WorkspaceTemplatePicker layoutSize={canvasSize} />
+          <div className="canvas__placeholder__add-menu">
             <AddComponentMenu />
           </div>
         </div>

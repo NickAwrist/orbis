@@ -44,3 +44,11 @@
   color: var(--text-muted);
 }
 
+/* Empty workspace: center placeholder; panels use absolute positioning so they stay out of flex flow */
+.canvas--empty-workspace {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+

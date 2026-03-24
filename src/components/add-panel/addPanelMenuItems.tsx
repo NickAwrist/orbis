@@ -100,6 +100,13 @@ export const ADD_PANEL_MENU_ENTRIES: AddPanelMenuEntry[] = [
         pick: { kind: 'panel', panelType: 'terminal', state: { command: 'codex' } },
       },
       {
+        key: 'cursor',
+        label: 'Cursor',
+        desc: 'Run Cursor Agent',
+        icon: <img src={panelMenuIconSrc('cursor.png')} width={16} height={16} alt="Cursor" />,
+        pick: { kind: 'panel', panelType: 'terminal', state: { command: 'agent' } },
+      },
+      {
         key: 't3-code',
         label: 'T3 Code',
         desc: 'Graphical panel for the T3 coding agent',

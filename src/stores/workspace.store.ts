@@ -82,6 +82,25 @@ function maxZIndexFromWorkspaces(workspaces: WorkspaceState[]): number {
   return maxZ
 }
 
+/** Avoid logging full file bodies when editor tabs update on every keystroke. */
+function sanitizePanelUpdatesForLog(updates: Partial<PanelState>): Partial<PanelState> {
+  const cs = updates.componentState
+  if (!cs || typeof cs !== 'object' || !Array.isArray((cs as { tabs?: unknown }).tabs)) {
+    return updates
+  }
+  const tabs = (cs as { tabs: unknown[] }).tabs.map((tab) => {
+    if (!tab || typeof tab !== 'object') return tab
+    const t = tab as Record<string, unknown>
+    if (typeof t.content !== 'string') return tab
+    const { content: _omit, ...rest } = t
+    return { ...rest, contentLength: t.content.length }
+  })
+  return {
+    ...updates,
+    componentState: { ...(cs as object), tabs },
+  }
+}
+
 const PANEL_DEFAULTS: Record<PanelType, { width: number; height: number }> = {
   editor: { width: 700, height: 500 },
   terminal: { width: 700, height: 350 },
@@ -282,7 +301,7 @@ export const useIDEStore = create<IDEStore>()((set, get) => ({
   },
 
   updatePanel: (panelId, updates) => {
-    log.debug('update_panel', JSON.stringify({ panelId, updates }))
+    log.debug('update_panel', JSON.stringify({ panelId, updates: sanitizePanelUpdatesForLog(updates) }))
     set((s) => ({
       workspaces: s.workspaces.map((w) =>
         w.panels.some((p) => p.id === panelId)

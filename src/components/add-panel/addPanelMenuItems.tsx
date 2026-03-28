@@ -59,7 +59,7 @@ export const ADD_PANEL_MENU_ENTRIES: AddPanelMenuEntry[] = [
     key: 'editor',
     panelType: 'editor',
     label: 'Code Editor',
-    desc: 'Edit files with syntax highlighting',
+    desc: 'Edit text and source code',
     icon: <Codicon name="file-code" />,
   },
   {
@@ -67,7 +67,7 @@ export const ADD_PANEL_MENU_ENTRIES: AddPanelMenuEntry[] = [
     key: 'shell',
     panelType: 'terminal',
     label: 'Shell',
-    desc: 'Full terminal emulator',
+    desc: 'Command line interface',
     icon: <Codicon name="terminal" />,
   },
   {
@@ -81,7 +81,7 @@ export const ADD_PANEL_MENU_ENTRIES: AddPanelMenuEntry[] = [
       {
         key: 'claude',
         label: 'Claude Code',
-        desc: 'Run Anthropic Claude Code',
+        desc: 'Terminal-based Anthropic Claude Code',
         icon: <img src={panelMenuIconSrc('claude.png')} width={16} height={16} alt="Claude" />,
         pick: { kind: 'panel', panelType: 'terminal', state: { command: 'claude' } },
       },
@@ -142,8 +142,8 @@ export const ADD_PANEL_MENU_ENTRIES: AddPanelMenuEntry[] = [
   {
     kind: 'submenu',
     id: 'extension-panel',
-    label: 'Extension Panel',
-    desc: 'Open a panel provided by an extension',
+    label: 'Custom Extension Panel',
+    desc: 'Add custom panels from installed extensions',
     icon: <Codicon name="extensions" />,
     submenuTitle: 'Extension panels',
     loadItems: async () => {

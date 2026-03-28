@@ -66,7 +66,7 @@ export function WorkspaceSwitcher() {
       e.preventDefault()
       if (
         window.confirm(
-          'Delete this workspace permanently? Saved layout on disk will be removed.',
+          'Are you sure you want to permanently delete this workspace? Your saved layout on disk will also be removed.',
         )
       ) {
         void deleteWorkspacePermanently(id)
@@ -94,7 +94,7 @@ export function WorkspaceSwitcher() {
               title={
                 isGhost
                   ? undefined
-                  : `${ws.rootPath}\nRight-click: delete permanently`
+                  : `${ws.rootPath}\nRight-click: Delete permanently`
               }
               onAnimationEnd={
                 isGhost
@@ -113,7 +113,7 @@ export function WorkspaceSwitcher() {
                     e.stopPropagation()
                     void closeWorkspace(ws.id)
                   }}
-                  title="Close workspace (keeps saved state)"
+                  title="Close Workspace"
                   aria-label="Close workspace"
                 >
                   <IconClose size="xs" />
@@ -125,7 +125,7 @@ export function WorkspaceSwitcher() {
         <button
           className="workspace-switcher__add"
           onClick={() => setModalOpen(true)}
-          title="New or open workspace"
+          title="Open or Create Workspace"
         >
           +
         </button>

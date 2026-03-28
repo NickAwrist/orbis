@@ -15,7 +15,7 @@ export function CreateWorkspaceSection({
 }: Props) {
   return (
     <section className="workspace-modal__section">
-      <h3 className="workspace-modal__section-title">Create new</h3>
+      <h3 className="workspace-modal__section-title">Create New Workspace</h3>
       <div className="workspace-modal__field">
         <label className="workspace-modal__label" htmlFor="ws-name">
           Name
@@ -23,7 +23,7 @@ export function CreateWorkspaceSection({
         <input
           id="ws-name"
           className="workspace-modal__input"
-          placeholder="Optional"
+          placeholder="Workspace name (optional)"
           value={newName}
           onChange={(e) => onNewNameChange(e.target.value)}
           onKeyDown={(e) => {
@@ -32,9 +32,9 @@ export function CreateWorkspaceSection({
         />
       </div>
       <div className="workspace-modal__field workspace-modal__field--row">
-        <span className="workspace-modal__path">{rootPath || 'No folder selected'}</span>
+        <span className="workspace-modal__path">{rootPath || 'No directory selected'}</span>
         <button type="button" className="workspace-modal__btn" onClick={onBrowse}>
-          Choose folder…
+          Browse...
         </button>
       </div>
       <button
@@ -43,7 +43,7 @@ export function CreateWorkspaceSection({
         onClick={onCreate}
         disabled={!rootPath}
       >
-        Create workspace
+        Create Workspace
       </button>
     </section>
   )

@@ -116,7 +116,7 @@ export function WorkspaceManagerModal({ open, onClose }: Props) {
   const handleDelete = async (id: string) => {
     if (
       !window.confirm(
-        'Delete this workspace permanently? Saved layout on disk will be removed.',
+        'Are you sure you want to permanently delete this workspace? Your saved layout on disk will also be removed.',
       )
     ) {
       return
@@ -170,9 +170,9 @@ export function WorkspaceManagerModal({ open, onClose }: Props) {
         </div>
         <div className="workspace-modal__body">
           <section className="workspace-modal__section">
-            <h3 className="workspace-modal__section-title">Open now</h3>
+            <h3 className="workspace-modal__section-title">Currently Open</h3>
             {workspaces.length === 0 ? (
-              <p className="workspace-modal__empty">No workspace is open.</p>
+              <p className="workspace-modal__empty">No workspaces are currently open.</p>
             ) : (
               <ul className="workspace-modal__list">
                 {workspaces.map((ws) => (
@@ -185,7 +185,7 @@ export function WorkspaceManagerModal({ open, onClose }: Props) {
                     renameDraft={renameDraft}
                     menuOpen={menuOpenId === ws.id}
                     isActiveWorkspace={ws.id === activeWorkspaceId}
-                    mainTitle="Switch to this workspace"
+                    mainTitle="Switch to Workspace"
                     onRenameDraftChange={setRenameDraft}
                     onCommitRename={commitRename}
                     onCancelRename={cancelRename}
@@ -198,9 +198,9 @@ export function WorkspaceManagerModal({ open, onClose }: Props) {
           </section>
 
           <section className="workspace-modal__section">
-            <h3 className="workspace-modal__section-title">Saved workspaces</h3>
+            <h3 className="workspace-modal__section-title">Saved Workspaces</h3>
             {closed.length === 0 ? (
-              <p className="workspace-modal__empty">No saved workspaces yet.</p>
+              <p className="workspace-modal__empty">No saved workspaces found.</p>
             ) : (
               <ul className="workspace-modal__list">
                 {closed.map((s) => (
@@ -212,7 +212,7 @@ export function WorkspaceManagerModal({ open, onClose }: Props) {
                     isRenaming={renamingId === s.id}
                     renameDraft={renameDraft}
                     menuOpen={menuOpenId === s.id}
-                    mainTitle="Open this workspace"
+                    mainTitle="Open Workspace"
                     onRenameDraftChange={setRenameDraft}
                     onCommitRename={commitRename}
                     onCancelRename={cancelRename}

@@ -83,11 +83,11 @@ export function ExtensionsModal() {
     try {
       const ws = (window as unknown as { __activeWorkspaceRoot?: string }).__activeWorkspaceRoot
       await window.electronAPI.extensions.startHost(ws ? [ws] : [])
-      setStatusMsg('Extension host started')
+      setStatusMsg('Extension Host started')
       setTimeout(() => setStatusMsg(null), 3000)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      setError(`Failed to start extension host: ${msg}`)
+      setError(`Failed to start Extension Host: ${msg}`)
     }
     await refreshHostStatus()
   }, [refreshHostStatus])
@@ -127,7 +127,7 @@ export function ExtensionsModal() {
         await window.electronAPI.extensions.install(ext.namespace, ext.name)
         await loadInstalled()
         await loadThemes()
-        setStatusMsg(`Installed ${ext.displayName || ext.name}. Restart host to activate.`)
+        setStatusMsg(`Installed ${ext.displayName || ext.name}. Restart Extension Host to activate.`)
         setTimeout(() => setStatusMsg(null), 5000)
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)

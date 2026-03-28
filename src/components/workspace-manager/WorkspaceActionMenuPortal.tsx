@@ -53,7 +53,7 @@ export function WorkspaceActionMenuPortal({
             role="menuitem"
             onClick={() => onStartRename(openWs.id, openWs.name)}
           >
-            Rename…
+            Rename...
           </button>
           <button
             type="button"
@@ -61,7 +61,7 @@ export function WorkspaceActionMenuPortal({
             role="menuitem"
             onClick={() => void onDelete(openWs.id)}
           >
-            Delete permanently…
+            Delete Permanently...
           </button>
         </>
       )}
@@ -73,7 +73,7 @@ export function WorkspaceActionMenuPortal({
             role="menuitem"
             onClick={() => onStartRename(closedWs.id, closedWs.name)}
           >
-            Rename…
+            Rename...
           </button>
           <button
             type="button"
@@ -81,7 +81,7 @@ export function WorkspaceActionMenuPortal({
             role="menuitem"
             onClick={() => void onDelete(closedWs.id)}
           >
-            Delete permanently…
+            Delete Permanently...
           </button>
         </>
       )}

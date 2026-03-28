@@ -140,8 +140,8 @@ export function AddComponentMenu({ subscribeGlobalOpen = true }: Props) {
             <Codicon name="extensions" />
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <span className="add-menu__item-label">Open Empty (pick later)</span>
-            <span className="add-menu__item-desc">Choose the contribution after the panel opens</span>
+            <span className="add-menu__item-label">Placeholder Panel</span>
+            <span className="add-menu__item-desc">Select an extension panel later</span>
           </div>
         </div>
       </button>

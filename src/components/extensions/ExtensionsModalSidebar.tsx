@@ -105,8 +105,8 @@ export function ExtensionsModalSidebar({
             {hostStatus.starting
               ? 'Starting...'
               : hostStatus.running
-                ? 'Host Running'
-                : 'Host Stopped'}
+                ? 'Extension Host Running'
+                : 'Extension Host Stopped'}
           </span>
         </div>
         <button
@@ -115,7 +115,7 @@ export function ExtensionsModalSidebar({
           onClick={onStartHost}
           disabled={hostStatus.starting}
         >
-          {hostStatus.starting ? 'Starting...' : hostStatus.running ? 'Restart Host' : 'Start Host'}
+          {hostStatus.starting ? 'Starting...' : hostStatus.running ? 'Restart Extension Host' : 'Start Extension Host'}
         </button>
       </div>
     </div>
